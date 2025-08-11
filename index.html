@@ -1,3 +1,325 @@
-<html>
-<!-- placeholder, actual HTML content will be inserted here by the assistant -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Firefighter Ladder Rescue</title>
+
+  <!-- PWA / iOS -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+
+  <style>
+    :root {
+      --bg:#0b1220; --building:#24324a; --window:#5fa8ff; --window-dim:#304560;
+      --ui:#101827; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; --accent:#f97316;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+    .wrap{display:flex;flex-direction:column;height:100%;max-width:800px;margin:0 auto;}
+    header{color:white;padding:8px 12px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+    header .stats{display:flex;gap:12px;font-weight:600}
+    header .pill{padding:4px 10px;border-radius:999px;background:#111827}
+    /* Brand row with FSA badge */
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px;border-radius:999px;background:#111827}
+    .brand img{width:28px;height:28px;object-fit:contain;border-radius:6px}
+    .brand span{font-weight:700}
+    canvas{flex:1;touch-action:none;background:linear-gradient(#0b1220 0%, #15223a 60%, #0b1220 100%)}
+    .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px;background:var(--ui)}
+    .controls button{
+      font-size:16px;border:none;border-radius:10px;padding:14px 10px;background:#1f2937;color:#e5e7eb;
+      box-shadow:0 2px 0 #111827;touch-action:manipulation
+    }
+    .controls button:active{transform:translateY(1px)}
+    .controls .big{grid-column:1/-1;background:var(--accent);color:#fff;font-weight:700}
+    .hint{color:#9ca3af;font-size:12px;text-align:center;padding:6px}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .card{background:#0f172a;color:#e5e7eb;border-radius:14px;padding:16px;max-width:420px;text-align:center}
+    .card h2{margin:.2rem 0 0 0}
+    .card p{color:#cbd5e1}
+    .row{display:flex;gap:8px;justify-content:center;margin-top:10px}
+    .row button{background:#1f2937}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="stats">
+        <div class="pill" id="score">Rescued: 0</div>
+        <div class="pill" id="timer">Smoke: 60s</div>
+        <div class="pill" id="level">Level: 1</div>
+      </div>
+
+      <!-- FSA badge + title -->
+      <div class="brand" aria-label="First Division Association">
+        <img src="icon-192.png" alt="FSA badge">
+        <span>👩‍🚒 Ladder Rescue</span>
+      </div>
+    </header>
+
+    <canvas id="game" width="800" height="600"></canvas>
+
+    <div class="controls">
+      <button id="left">◀︎ Left</button>
+      <button id="up">▲ Up</button>
+      <button id="right">Right ▶︎</button>
+      <button id="down">▼ Down</button>
+      <button id="rescue" class="big">🆘 RESCUE</button>
+    </div>
+    <div class="hint">Tip: Climb the ladder, move along the floor to a lit window with a victim, then tap <b>RESCUE</b>. Add this to your Home Screen for full-screen play.</div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="card">
+      <h2 id="modal-title">Paused</h2>
+      <p id="modal-msg">—</p>
+      <div class="row">
+        <button id="btn-restart">Restart</button>
+        <button id="btn-continue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // PWA service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+
+    // ======= Game Setup (unchanged core) =======
+    const cvs = document.getElementById('game');
+    const ctx = cvs.getContext('2d');
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const levelEl = document.getElementById('level');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMsg = document.getElementById('modal-msg');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnContinue = document.getElementById('btn-continue');
+
+    function fit() {
+      const rect = cvs.getBoundingClientRect();
+      cvs.width = Math.floor(rect.width * DPR);
+      cvs.height = Math.floor(rect.height * DPR);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    fit();
+    addEventListener('resize', fit);
+
+    const FLOORS = 4, WINDOWS_PER_FLOOR = 6;
+    const building = {
+      x: 140,
+      w: () => Math.min(cvs.width-160, 520),
+      baseY: () => cvs.height - 60,
+      floorH: 90
+    };
+    const ladder = {
+      x: () => building.x + 26,
+      top: () => building.baseY() - building.floorH * FLOORS,
+      bottom: () => building.baseY()
+    };
+
+    let level = 1, rescued = 0, timeLeft = 60, running = true;
+
+    const player = {
+      x: ladder.x() + 6, y: ladder.bottom() - 30, w: 24, h: 34,
+      floor: 0, onLadder: true, speedX: 2.2, speedY: 2.6
+    };
+
+    let victims = [];
+    function spawnVictims() {
+      victims = [];
+      const count = Math.min(2 + level, WINDOWS_PER_FLOOR);
+      const slots = new Set();
+      while (victims.length < count) {
+        const f = 1 + Math.floor(Math.random() * FLOORS);
+        const w = Math.floor(Math.random() * WINDOWS_PER_FLOOR);
+        const key = `${f}-${w}`;
+        if (!slots.has(key)) {
+          slots.add(key);
+          victims.push({ floor:f, win:w, saved:false, smoke: 20 + Math.floor(Math.random()*20) });
+        }
+      }
+    }
+    spawnVictims();
+
+    function windowRect(floor, index) {
+      const x0 = building.x + 60;
+      const w = building.w();
+      const usableW = w - 120;
+      const gap = usableW / WINDOWS_PER_FLOOR;
+      const cx = x0 + gap * index + gap/2;
+      const y = building.baseY() - building.floorH * floor;
+      return { cx, cy: y - 30, w:40, h:50 };
+    }
+
+    const keys = {left:false,right:false,up:false,down:false};
+    function bindHold(id, prop){
+      const el = document.getElementById(id);
+      const set = v=>keys[prop]=v;
+      ['pointerdown','mousedown','touchstart'].forEach(ev=>el.addEventListener(ev, e=>{e.preventDefault(); set(true)}));
+      ['pointerup','pointerleave','mouseup','touchend','touchcancel'].forEach(ev=>el.addEventListener(ev, e=>{e.preventDefault(); set(false)}));
+    }
+    bindHold('left','left'); bindHold('right','right'); bindHold('up','up'); bindHold('down','down');
+
+    document.getElementById('rescue').addEventListener('click', tryRescue);
+    btnRestart.addEventListener('click', () => { hideModal(); reset(true); });
+    btnContinue.addEventListener('click', () => hideModal());
+
+    window.addEventListener('keydown', e=>{
+      if (e.key==='ArrowLeft') keys.left=true;
+      if (e.key==='ArrowRight') keys.right=true;
+      if (e.key==='ArrowUp') keys.up=true;
+      if (e.key==='ArrowDown') keys.down=true;
+      if (e.key===' '){ tryRescue(); }
+      if (e.key.toLowerCase()==='p'){ togglePause(); }
+    });
+    window.addEventListener('keyup', e=>{
+      if (e.key==='ArrowLeft') keys.left=false;
+      if (e.key==='ArrowRight') keys.right=false;
+      if (e.key==='ArrowUp') keys.up=false;
+      if (e.key==='ArrowDown') keys.down=false;
+    });
+
+    function togglePause(){ running = !running; if (!running) showModal('Paused','Game paused. Tap Continue to resume.'); else hideModal(); }
+    function showModal(t,m){ modalTitle.textContent=t; modalMsg.textContent=m; modal.style.display='flex'; }
+    function hideModal(){ modal.style.display='none'; running=true; }
+
+    let last = 0;
+    function loop(ts){
+      requestAnimationFrame(loop);
+      const dt = Math.min(32, ts - last) / 16.67; last = ts;
+      if (!running) return;
+      update(dt); draw();
+    }
+    requestAnimationFrame(loop);
+
+    setInterval(()=>{
+      if (!running) return;
+      timeLeft--; if (timeLeft<=0){ defeat('Smoke conditions worsened. Try again!'); }
+      timerEl.textContent = `Smoke: ${timeLeft}s`;
+    },1000);
+
+    function update(dt){
+      if (player.onLadder){
+        if (keys.up)    player.y -= player.speedY*dt;
+        if (keys.down)  player.y += player.speedY*dt;
+        const top = ladder.top()+8, bottom = ladder.bottom()-30;
+        player.y = Math.max(top, Math.min(bottom, player.y));
+        const f = Math.round((ladder.bottom() - player.y) / building.floorH);
+        player.floor = Math.max(0, Math.min(FLOORS, f));
+        if (keys.right && player.floor>0){ player.onLadder=false; const landingY = ladder.bottom() - building.floorH*player.floor; player.y = landingY - 2; player.x = ladder.x() + 52; }
+      } else {
+        if (keys.left)  player.x -= player.speedX*dt;
+        if (keys.right) player.x += player.speedX*dt;
+        const floorY = ladder.bottom() - building.floorH*player.floor; player.y = floorY - 2;
+        const leftBound = building.x + 50, rightBound = building.x + building.w() - 50;
+        player.x = Math.max(leftBound, Math.min(rightBound, player.x));
+        const nearLadder = Math.abs(player.x - (ladder.x()+52)) < 10;
+        if (nearLadder && keys.left){ player.onLadder = true; player.x = ladder.x()+6; }
+      }
+
+      victims.forEach(v=>{ if (!v.saved && Math.random()<0.008*level) v.smoke = Math.max(0, v.smoke-1); });
+
+      if (victims.every(v=>v.saved)){
+        level++; rescued += victims.length;
+        scoreEl.textContent = `Rescued: ${rescued}`;
+        levelEl.textContent = `Level: ${level}`;
+        timeLeft = 60 - Math.min(30, (level-1)*4);
+        spawnVictims();
+        showModal('Great work!','All victims rescued. Advancing to the next level.');
+      }
+    }
+
+    function tryRescue(){
+      if (player.onLadder || player.floor===0) return;
+      const nearestIndex = Math.max(0, Math.min(WINDOWS_PER_FLOOR-1,
+        Math.round(((player.x - (building.x+60)) / (building.w()-120)) * WINDOWS_PER_FLOOR)
+      ));
+      const v = victims.find(v => v.floor===player.floor && v.win===nearestIndex && !v.saved);
+      if (!v) return;
+      if (v.smoke<=0){ defeat('Victim succumbed to smoke.'); return; }
+      v.saved = true; rescued++; scoreEl.textContent = `Rescued: ${rescued}`;
+    }
+
+    function defeat(msg){ running=false; showModal('Mission Failed', msg+' Tap Restart to try again.'); }
+
+    function draw(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0, building.baseY(), cvs.width, 60);
+
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--building');
+      ctx.fillRect(building.x, ladder.top()-30, building.w(), building.baseY() - (ladder.top()-30));
+
+      for (let f=1; f<=FLOORS; f++){
+        for (let i=0; i<WINDOWS_PER_FLOOR; i++){
+          const r = windowRect(f,i);
+          const vv = victims.find(v=>v.floor===f && v.win===i && !v.saved);
+          const lit = !!vv;
+          ctx.fillStyle = lit ? getComputedStyle(document.documentElement).getPropertyValue('--window')
+                              : getComputedStyle(document.documentElement).getPropertyValue('--window-dim');
+          ctx.fillRect(r.cx - r.w/2, r.cy - r.h/2, r.w, r.h);
+          ctx.strokeStyle = '#1f2b40'; ctx.lineWidth = 2; ctx.strokeRect(r.cx - r.w/2, r.cy - r.h/2, r.w, r.h);
+
+          if (vv){
+            ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(r.cx, r.cy+6, 6, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(r.cx, r.cy+10); ctx.lineTo(r.cx+8*Math.sin(Date.now()/200), r.cy+2); ctx.stroke();
+
+            const pct = vv.smoke/40; const barW = 36, barH = 6;
+            ctx.fillStyle = '#111827'; ctx.fillRect(r.cx - barW/2, r.cy - r.h/2 - 10, barW, barH);
+            ctx.fillStyle = pct>0.66? '#22c55e' : pct>0.33? '#f59e0b' : '#ef4444';
+            ctx.fillRect(r.cx - barW/2, r.cy - r.h/2 - 10, barW*pct, barH);
+
+            ctx.globalAlpha = 0.6; ctx.fillStyle = '#6b7280';
+            const s = 6 + 4*Math.sin((Date.now()/300)+(i*7));
+            ctx.beginPath(); ctx.arc(r.cx-10, r.cy-18, s, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(r.cx+6, r.cy-22, s*0.8, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        }
+        const y = building.baseY() - building.floorH*f;
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 3; ctx.beginPath();
+        ctx.moveTo(building.x+40, y); ctx.lineTo(building.x+building.w()-40, y); ctx.stroke();
+      }
+
+      const laddX = ladder.x();
+      ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(laddX, ladder.bottom()); ctx.lineTo(laddX, ladder.top()); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(laddX+24, ladder.bottom()); ctx.lineTo(laddX+24, ladder.top()); ctx.stroke();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#cbd5e1';
+      for (let y=ladder.top()+10; y<ladder.bottom(); y+=18){
+        ctx.beginPath(); ctx.moveTo(laddX, y); ctx.lineTo(laddX+24, y); ctx.stroke();
+      }
+
+      drawFirefighter(player.x, player.y);
+
+      if (timeLeft < 12){
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.08)';
+        ctx.fillRect(0,0,cvs.width,cvs.height);
+      }
+    }
+
+    function drawFirefighter(x,y){
+      ctx.fillStyle = '#1f2937'; ctx.fillRect(x-9, y+28, 8, 4); ctx.fillRect(x+1, y+28, 8, 4);
+      ctx.fillStyle = '#111827'; ctx.fillRect(x-8, y+10, 7, 18); ctx.fillRect(x+1, y+10, 7, 18);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(x-10, y-2, 22, 16);
+      ctx.fillStyle = '#fde68a'; ctx.fillRect(x-10, y+4, 22, 3);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(x-12, y, 6, 12); ctx.fillRect(x+10, y, 6, 12);
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(x+1, y-6, 9, Math.PI, 0); ctx.fill(); ctx.fillRect(x-8, y-6, 18, 4);
+      ctx.fillStyle = '#93c5fd'; ctx.fillRect(x-6, y-6, 14, 5);
+      ctx.fillStyle = '#6b7280'; ctx.fillRect(x-13, y-2, 6, 14);
+    }
+
+    function reset(full=false){
+      if (full){ level=1; rescued=0; scoreEl.textContent='Rescued: 0'; levelEl.textContent='Level: 1'; }
+      timeLeft=60; player.x = ladder.x() + 6; player.y = ladder.bottom() - 30;
+      player.onLadder = true; player.floor=0; spawnVictims(); hideModal();
+    }
+  </script>
+</body>
 </html>
