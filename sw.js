@@ -1,4 +1,4 @@
-const CACHE = 'ff-ladder-v1';
+const CACHE = 'ff-ladder-v2';
 const ASSETS = [
   './',
   './index.html',
