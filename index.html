@@ -4,14 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Firefighter Ladder Rescue</title>
-
-  <!-- PWA / iOS -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-
   <style>
     :root {
       --bg:#0b1220; --building:#24324a; --window:#5fa8ff; --window-dim:#304560;
@@ -22,7 +19,6 @@
     header{color:white;padding:8px 12px;display:flex;gap:12px;align-items:center;justify-content:space-between}
     header .stats{display:flex;gap:12px;font-weight:600}
     header .pill{padding:4px 10px;border-radius:999px;background:#111827}
-    /* Brand row with FSA badge */
     .brand{display:flex;align-items:center;gap:10px;padding:4px 10px;border-radius:999px;background:#111827}
     .brand img{width:28px;height:28px;object-fit:contain;border-radius:6px}
     .brand span{font-weight:700}
@@ -51,16 +47,12 @@
         <div class="pill" id="timer">Smoke: 60s</div>
         <div class="pill" id="level">Level: 1</div>
       </div>
-
-      <!-- FSA badge + title -->
       <div class="brand" aria-label="First Division Association">
         <img src="icon-192.png" alt="FSA badge">
         <span>👩‍🚒 Ladder Rescue</span>
       </div>
     </header>
-
     <canvas id="game" width="800" height="600"></canvas>
-
     <div class="controls">
       <button id="left">◀︎ Left</button>
       <button id="up">▲ Up</button>
@@ -70,7 +62,6 @@
     </div>
     <div class="hint">Tip: Climb the ladder, move along the floor to a lit window with a victim, then tap <b>RESCUE</b>. Add this to your Home Screen for full-screen play.</div>
   </div>
-
   <div class="modal" id="modal">
     <div class="card">
       <h2 id="modal-title">Paused</h2>
@@ -81,14 +72,11 @@
       </div>
     </div>
   </div>
-
   <script>
-    // PWA service worker
+    console.log("Ladder Rescue v1.0 loaded");
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
     }
-
-    // ======= Game Setup (unchanged core) =======
     const cvs = document.getElementById('game');
     const ctx = cvs.getContext('2d');
     const DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -100,7 +88,6 @@
     const modalMsg = document.getElementById('modal-msg');
     const btnRestart = document.getElementById('btn-restart');
     const btnContinue = document.getElementById('btn-continue');
-
     function fit() {
       const rect = cvs.getBoundingClientRect();
       cvs.width = Math.floor(rect.width * DPR);
@@ -109,7 +96,6 @@
     }
     fit();
     addEventListener('resize', fit);
-
     const FLOORS = 4, WINDOWS_PER_FLOOR = 6;
     const building = {
       x: 140,
@@ -122,14 +108,11 @@
       top: () => building.baseY() - building.floorH * FLOORS,
       bottom: () => building.baseY()
     };
-
     let level = 1, rescued = 0, timeLeft = 60, running = true;
-
     const player = {
       x: ladder.x() + 6, y: ladder.bottom() - 30, w: 24, h: 34,
       floor: 0, onLadder: true, speedX: 2.2, speedY: 2.6
     };
-
     let victims = [];
     function spawnVictims() {
       victims = [];
@@ -146,7 +129,6 @@
       }
     }
     spawnVictims();
-
     function windowRect(floor, index) {
       const x0 = building.x + 60;
       const w = building.w();
@@ -156,7 +138,6 @@
       const y = building.baseY() - building.floorH * floor;
       return { cx, cy: y - 30, w:40, h:50 };
     }
-
     const keys = {left:false,right:false,up:false,down:false};
     function bindHold(id, prop){
       const el = document.getElementById(id);
@@ -165,11 +146,9 @@
       ['pointerup','pointerleave','mouseup','touchend','touchcancel'].forEach(ev=>el.addEventListener(ev, e=>{e.preventDefault(); set(false)}));
     }
     bindHold('left','left'); bindHold('right','right'); bindHold('up','up'); bindHold('down','down');
-
     document.getElementById('rescue').addEventListener('click', tryRescue);
     btnRestart.addEventListener('click', () => { hideModal(); reset(true); });
     btnContinue.addEventListener('click', () => hideModal());
-
     window.addEventListener('keydown', e=>{
       if (e.key==='ArrowLeft') keys.left=true;
       if (e.key==='ArrowRight') keys.right=true;
@@ -184,11 +163,9 @@
       if (e.key==='ArrowUp') keys.up=false;
       if (e.key==='ArrowDown') keys.down=false;
     });
-
     function togglePause(){ running = !running; if (!running) showModal('Paused','Game paused. Tap Continue to resume.'); else hideModal(); }
     function showModal(t,m){ modalTitle.textContent=t; modalMsg.textContent=m; modal.style.display='flex'; }
     function hideModal(){ modal.style.display='none'; running=true; }
-
     let last = 0;
     function loop(ts){
       requestAnimationFrame(loop);
@@ -197,13 +174,11 @@
       update(dt); draw();
     }
     requestAnimationFrame(loop);
-
     setInterval(()=>{
       if (!running) return;
       timeLeft--; if (timeLeft<=0){ defeat('Smoke conditions worsened. Try again!'); }
       timerEl.textContent = `Smoke: ${timeLeft}s`;
     },1000);
-
     function update(dt){
       if (player.onLadder){
         if (keys.up)    player.y -= player.speedY*dt;
@@ -222,9 +197,7 @@
         const nearLadder = Math.abs(player.x - (ladder.x()+52)) < 10;
         if (nearLadder && keys.left){ player.onLadder = true; player.x = ladder.x()+6; }
       }
-
       victims.forEach(v=>{ if (!v.saved && Math.random()<0.008*level) v.smoke = Math.max(0, v.smoke-1); });
-
       if (victims.every(v=>v.saved)){
         level++; rescued += victims.length;
         scoreEl.textContent = `Rescued: ${rescued}`;
@@ -234,7 +207,6 @@
         showModal('Great work!','All victims rescued. Advancing to the next level.');
       }
     }
-
     function tryRescue(){
       if (player.onLadder || player.floor===0) return;
       const nearestIndex = Math.max(0, Math.min(WINDOWS_PER_FLOOR-1,
@@ -245,16 +217,12 @@
       if (v.smoke<=0){ defeat('Victim succumbed to smoke.'); return; }
       v.saved = true; rescued++; scoreEl.textContent = `Rescued: ${rescued}`;
     }
-
     function defeat(msg){ running=false; showModal('Mission Failed', msg+' Tap Restart to try again.'); }
-
     function draw(){
       ctx.clearRect(0,0,cvs.width,cvs.height);
       ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0, building.baseY(), cvs.width, 60);
-
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--building');
       ctx.fillRect(building.x, ladder.top()-30, building.w(), building.baseY() - (ladder.top()-30));
-
       for (let f=1; f<=FLOORS; f++){
         for (let i=0; i<WINDOWS_PER_FLOOR; i++){
           const r = windowRect(f,i);
@@ -264,17 +232,14 @@
                               : getComputedStyle(document.documentElement).getPropertyValue('--window-dim');
           ctx.fillRect(r.cx - r.w/2, r.cy - r.h/2, r.w, r.h);
           ctx.strokeStyle = '#1f2b40'; ctx.lineWidth = 2; ctx.strokeRect(r.cx - r.w/2, r.cy - r.h/2, r.w, r.h);
-
           if (vv){
             ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(r.cx, r.cy+6, 6, 0, Math.PI*2); ctx.fill();
             ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.moveTo(r.cx, r.cy+10); ctx.lineTo(r.cx+8*Math.sin(Date.now()/200), r.cy+2); ctx.stroke();
-
             const pct = vv.smoke/40; const barW = 36, barH = 6;
             ctx.fillStyle = '#111827'; ctx.fillRect(r.cx - barW/2, r.cy - r.h/2 - 10, barW, barH);
             ctx.fillStyle = pct>0.66? '#22c55e' : pct>0.33? '#f59e0b' : '#ef4444';
             ctx.fillRect(r.cx - barW/2, r.cy - r.h/2 - 10, barW*pct, barH);
-
             ctx.globalAlpha = 0.6; ctx.fillStyle = '#6b7280';
             const s = 6 + 4*Math.sin((Date.now()/300)+(i*7));
             ctx.beginPath(); ctx.arc(r.cx-10, r.cy-18, s, 0, Math.PI*2); ctx.fill();
@@ -286,7 +251,6 @@
         ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 3; ctx.beginPath();
         ctx.moveTo(building.x+40, y); ctx.lineTo(building.x+building.w()-40, y); ctx.stroke();
       }
-
       const laddX = ladder.x();
       ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 6;
       ctx.beginPath(); ctx.moveTo(laddX, ladder.bottom()); ctx.lineTo(laddX, ladder.top()); ctx.stroke();
@@ -295,15 +259,12 @@
       for (let y=ladder.top()+10; y<ladder.bottom(); y+=18){
         ctx.beginPath(); ctx.moveTo(laddX, y); ctx.lineTo(laddX+24, y); ctx.stroke();
       }
-
       drawFirefighter(player.x, player.y);
-
       if (timeLeft < 12){
         ctx.fillStyle = 'rgba(239, 68, 68, 0.08)';
         ctx.fillRect(0,0,cvs.width,cvs.height);
       }
     }
-
     function drawFirefighter(x,y){
       ctx.fillStyle = '#1f2937'; ctx.fillRect(x-9, y+28, 8, 4); ctx.fillRect(x+1, y+28, 8, 4);
       ctx.fillStyle = '#111827'; ctx.fillRect(x-8, y+10, 7, 18); ctx.fillRect(x+1, y+10, 7, 18);
@@ -314,7 +275,6 @@
       ctx.fillStyle = '#93c5fd'; ctx.fillRect(x-6, y-6, 14, 5);
       ctx.fillStyle = '#6b7280'; ctx.fillRect(x-13, y-2, 6, 14);
     }
-
     function reset(full=false){
       if (full){ level=1; rescued=0; scoreEl.textContent='Rescued: 0'; levelEl.textContent='Level: 1'; }
       timeLeft=60; player.x = ladder.x() + 6; player.y = ladder.bottom() - 30;
