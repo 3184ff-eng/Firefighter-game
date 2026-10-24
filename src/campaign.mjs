@@ -48,8 +48,13 @@ export function persist(progress, storage = globalThis.localStorage) {
 
 // Level 1 is always available; after that you need the previous level's
 // interior finished, so neither stage can be skipped.
+//
+// A level you have already set foot in stays open regardless. Progression
+// should never take back access that was already earned - migrated saves can
+// legitimately describe a later level as finished while an earlier one is not.
 export function levelOpen(progress, level) {
   if (level <= 0) return true;
+  if (progress.exterior[level]?.done || progress.interior[level]?.done) return true;
   return !!progress.interior[level - 1]?.done;
 }
 
