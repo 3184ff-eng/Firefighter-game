@@ -1,13 +1,25 @@
 # Unsung Heroes — Into the Smoke
 
-A browser firefighter arcade game with three first-person 3D missions and the original four exterior ladder missions. The renderer is bundled Three.js 0.170.0 (MIT; license in vendor/THREE-LICENSE.txt). No external game assets or runtime CDN dependency: wall, floor and ceiling textures, flame and smoke sprites, and the fire and water audio beds are all generated at runtime in `src/fx.js`.
+A browser firefighter arcade game built as four levels. Each level is two stages: an exterior ladder mission is the prelude, and clearing it is what opens that level's first-person 3D interior. Finishing the interior opens the next level. The renderer is bundled Three.js 0.170.0 (MIT; license in vendor/THREE-LICENSE.txt). No external game assets or runtime CDN dependency: wall, floor and ceiling textures, flame and smoke sprites, and the fire and water audio beds are all generated at runtime in `src/fx.js`.
 
 ## Play
-Open index.html through an HTTP server. WASD moves; drag the scene to look; arrow left/right turns; Space sprays; E rescues or operates equipment; T toggles thermal scan; P pauses. Touch controls are provided. Return to the green stairwell to evacuate carried survivors and refill air/water. Clear all fires, rescue all people and complete the special objective to win. All three 3D missions are unlocked.
+Open index.html through an HTTP server. WASD moves; drag the scene to look; arrow left/right turns; Space sprays; E rescues or operates equipment; T toggles thermal scan; P pauses. Touch controls are provided. Return to the green stairwell to evacuate carried survivors and refill air/water. Clear all fires, rescue all people and complete the special objective to win. Levels unlock in order.
 
-1. Behind the door: apartment search and rescue.
-2. Pressure point: warehouse search with gas isolation before complete suppression.
-3. Lights out: garage search with emergency-power restoration.
+## Levels
+
+| # | Prelude (exterior) | Interior |
+|---|---|---|
+| 01 | Mariner House | Behind the door — apartment search and rescue |
+| 02 | Market Street | Pressure point — warehouse, isolate the gas before full suppression |
+| 03 | The Grand Hotel | Room to room — hotel corridor, vent the roof hatch |
+| 04 | Last Light Tower | Lights out — garage, restore emergency power |
+
+Stars earned on the prelude are added to the interior clock: one star +10s, two +20s, three +30s. Fires inside spread
+on a timer that shortens with each spread, so neglect compounds; the teaching level escalates least and the final
+level most. Spread is bounded — a capped number of new seats, never beside the stairwell, never inside a wall, never
+in the last 45 seconds and never once the building is clear.
+
+Progress lives in `unsung-heroes-campaign-v1`. Saves from before the campaign restructure are migrated on first load.
 
 Fires in the second and third missions spread to nearby cells over time, so a slow search costs you. Each run is rated out of three stars and the results screen shows how far you are from the next one.
 
