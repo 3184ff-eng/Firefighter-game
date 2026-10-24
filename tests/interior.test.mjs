@@ -415,3 +415,34 @@ test('the hull only burns while something is actually alight',()=>{
   for (let k = 0; k < 600; k++) tick(s, {}, 1/60);
   assert.equal(s.hull, before);
 });
+
+test('a thumbstick gives direction and magnitude, and keys still work as before',()=>{
+  const dist = (keys, seconds) => {
+    const s = createMission(0);
+    s.x = 10.5; s.z = 4.5; s.yaw = Math.PI;       // open corridor, facing +z
+    const x0 = s.x, z0 = s.z;
+    for (let t = 0; t < seconds; t += 1/60) tick(s, keys, 1/60);
+    return Math.hypot(s.x - x0, s.z - z0);
+  };
+  const key = dist({forward:true}, 1);
+  const full = dist({ay:1}, 1);
+  const half = dist({ay:0.5}, 1);
+  assert.ok(Math.abs(full - key) < 0.05, 'a full push matches holding the key');
+  assert.ok(half > 0.2 && half < full * 0.75, `a half push walks slower (${half.toFixed(2)} vs ${full.toFixed(2)})`);
+  assert.equal(dist({ay:0, ax:0}, 1), 0, 'a centred stick does not move you');
+
+  // Diagonals must not be faster than straight ahead.
+  const diag = dist({ay:1, ax:1}, 1);
+  assert.ok(diag <= full + 0.02, `a diagonal push is clamped (${diag.toFixed(2)} vs ${full.toFixed(2)})`);
+});
+
+test('analog turn matches holding the turn key',()=>{
+  const spin = keys => {
+    const s = createMission(0);
+    const y0 = s.yaw;
+    for (let t = 0; t < 1; t += 1/60) tick(s, keys, 1/60);
+    return s.yaw - y0;
+  };
+  assert.ok(Math.abs(spin({turnLeft:true}) - spin({turn:1})) < 0.02, 'full analog turn matches the key');
+  assert.ok(Math.abs(spin({turn:0.5})) < Math.abs(spin({turn:1})), 'a gentle turn is slower');
+});

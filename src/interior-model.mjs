@@ -184,9 +184,18 @@ export function interact(s) {
 
 function move(s, k, dt) {
   s.yaw += ((k.turnLeft ? 1 : 0) - (k.turnRight ? 1 : 0)) * dt * 1.7;
+  if (typeof k.turn === 'number') s.yaw += k.turn * dt * 1.7;   // analog look, from a thumbstick
   const speed = (s.carry === null ? 2.1 : 1.45) * dt;
   let f = (k.forward ? 1 : 0) - (k.back ? 1 : 0), r = (k.right ? 1 : 0) - (k.left ? 1 : 0);
-  const len = Math.hypot(f, r) || 1; f /= len; r /= len;
+  // A thumbstick gives a direction AND a magnitude, so a gentle push walks
+  // slowly. Keys stay all-or-nothing and are normalised as before.
+  if (typeof k.ax === 'number' || typeof k.ay === 'number') {
+    f = k.ay ?? 0; r = k.ax ?? 0;
+    const mag = Math.hypot(f, r);
+    if (mag > 1) { f /= mag; r /= mag; }
+  } else {
+    const len = Math.hypot(f, r) || 1; f /= len; r /= len;
+  }
   const dx = (-Math.sin(s.yaw) * f + Math.cos(s.yaw) * r) * speed;
   const dz = (-Math.cos(s.yaw) * f - Math.sin(s.yaw) * r) * speed;
   const ok = (x, z) => [-.2, .2].every(a => [-.2, .2].every(b => !wall(s, x + a, z + b)));

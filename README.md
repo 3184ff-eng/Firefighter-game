@@ -3,7 +3,7 @@
 A browser firefighter arcade game built as four levels. Each level is two stages: an exterior ladder mission is the prelude, and clearing it is what opens that level's first-person 3D interior. Finishing the interior opens the next level. The renderer is bundled Three.js 0.170.0 (MIT; license in vendor/THREE-LICENSE.txt). No external game assets or runtime CDN dependency: wall, floor and ceiling textures, flame and smoke sprites, and the fire and water audio beds are all generated at runtime in `src/fx.js`.
 
 ## Play
-Open index.html through an HTTP server. WASD moves; drag the scene to look; arrow left/right turns; Space sprays; E rescues or operates equipment; T toggles thermal scan; P pauses. Touch controls are provided. Return to the green stairwell to evacuate carried survivors and refill air/water. Clear all fires, rescue all people and complete the special objective to win. Levels unlock in order.
+Open index.html through an HTTP server. WASD moves; drag the scene to look; arrow left/right turns; Space sprays; E rescues or operates equipment; T toggles thermal scan; P pauses. On a phone or tablet a floating analog thumbstick appears wherever your left thumb lands; the right half of the screen drags the view, and the hose and interact buttons sit on the picture under your right thumb. The arrow pad is hidden on touch screens. Return to the green stairwell to evacuate carried survivors and refill air/water. Clear all fires, rescue all people and complete the special objective to win. Levels unlock in order.
 
 ## Levels
 
