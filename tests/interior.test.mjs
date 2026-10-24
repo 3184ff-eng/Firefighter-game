@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createMission, tick, interact, nearby, wall, clearLine,
-  MISSIONS, stars, nextStar, maxScore,
+  MISSIONS, stars, nextStar, maxScore, EXAMINE_REACH,
 } from '../src/interior-model.mjs';
 
 // ---- bot harness -----------------------------------------------------------
@@ -322,4 +322,45 @@ test('star thresholds scale with the mission and report the gap to the next one'
     assert.ok(nextStar(m, 0) > 0);
     assert.equal(nextStar(m, maxScore(m)), 0);
   }
+});
+
+test('evidence can be examined from where you actually stand',()=>{
+  // Found by playing it: the natural spot in the row-7 corridor is 1.51 from
+  // the door frame, which the old 1.4 reach rejected with no hint you were
+  // close. Pinned to that exact position.
+  const s = createMission(2);
+  s.x = 7.28; s.z = 7.01;
+  const frame = s.evidence.find(e => e.label.includes('door frame'));
+  assert.ok(Math.hypot(frame.x - s.x, frame.z - s.z) > 1.4, 'the spot really is outside the old reach');
+  assert.equal(nearby(s)?.type, 'evidence', 'and it is offered now');
+  assert.ok(EXAMINE_REACH > 1.4);
+});
+
+test('a wider examine reach stays unambiguous and still respects walls',()=>{
+  const s = createMission(2);
+  s.x = 1.5; s.z = 1.5;
+  assert.equal(nearby(s), null, 'nothing is in reach from the entry');
+
+  // No two pieces of evidence may ever be in reach at once, or examining one
+  // would silently consume the other.
+  const ev = s.evidence;
+  for (let i = 0; i < ev.length; i++) for (let j = i + 1; j < ev.length; j++) {
+    assert.ok(Math.hypot(ev[i].x - ev[j].x, ev[i].z - ev[j].z) > EXAMINE_REACH * 2,
+      `${ev[i].label} and ${ev[j].label} must not share a standing spot`);
+  }
+
+  // Two origin calls can overlap, and that is allowed, because the prompt
+  // always names the one you are about to make.
+  for (const o of s.origins) {
+    const probe = createMission(2);
+    probe.evidence.forEach(e => e.found = true);
+    probe.x = o.x; probe.z = o.z;
+    const n = nearby(probe);
+    assert.equal(n?.type, 'origin');
+    assert.ok(n.label.startsWith('Call it:'), 'the call is always named before you make it');
+  }
+
+  // reach() composes clearLine, whose wall behaviour is covered by the
+  // movement test above; this map has no open spot both within reach of a
+  // marker and blocked from it, so there is nothing honest to assert here.
 });

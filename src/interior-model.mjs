@@ -106,6 +106,9 @@ export function clearLine(s, x, z) {
   return true;
 }
 const reach = (s, p, r) => Math.hypot(p.x - s.x, p.z - s.z) < r && clearLine(s, p.x, p.z);
+// Examining and calling reach further than carrying does: these are fixed
+// things in a room, and the natural place to stand is often a touch over 1.4.
+export const EXAMINE_REACH = 1.9;
 
 // What E would do where you are standing. The HUD prints the label.
 export function nearby(s) {
@@ -113,11 +116,11 @@ export function nearby(s) {
   const person = s.people.find(p => !p.saved && !p.carried && reach(s, p, 1.3));
   if (person) return {type:'person', value:person, label:'Rescue casualty'};
 
-  const evidence = s.evidence.find(e => !e.found && reach(s, e, 1.4));
+  const evidence = s.evidence.find(e => !e.found && reach(s, e, EXAMINE_REACH));
   if (evidence) return {type:'evidence', value:evidence, label:evidence.label};
 
   if (s.evidence.length && s.evidence.every(e => e.found)) {
-    const origin = s.origins.find(o => reach(s, o, 1.4));
+    const origin = s.origins.find(o => reach(s, o, EXAMINE_REACH));
     if (origin) return {type:'origin', value:origin, label:origin.label};
   }
 
