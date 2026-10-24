@@ -98,3 +98,18 @@ test('a level deep link is only accepted when it names a real level', () => {
     assert.equal(readLevelParam(bad), null, `rejects ${bad || '(empty)'}`);
   }
 });
+
+test('a level already reached is never taken away', () => {
+  // Migrated saves can describe a later level as finished while an earlier one
+  // is not, which must not leave the finished one showing as locked.
+  const p = emptyProgress();
+  record(p, 'interior', 1, 2740, 0);
+  assert.equal(levelOpen(p, 1), true, 'a cleared interior keeps its own level open');
+  assert.equal(levelOpen(p, 2), true, 'and still opens the next level');
+  assert.equal(interiorOpen(p, 1), false, 'but its prelude is still outstanding');
+
+  const q = emptyProgress();
+  record(q, 'exterior', 2, 400, 1);
+  assert.equal(levelOpen(q, 2), true, 'a cleared prelude also keeps its level open');
+  assert.equal(levelOpen(q, 3), false, 'without opening the next one');
+});
