@@ -17,6 +17,10 @@ stairwell; what counts as winning, what kills you and what `E` does all come fro
 | 03 | The Grand Hotel | Cause and origin | **Fire investigation** — a cold scene, read it and call the origin |
 | 04 | Last Light Tower | Live load | **Gas containment** — valves down before the line goes |
 
+Every floor is 21x15 - a little over twice the old footprint - with its own plan: landings of flats, a quay with a
+vessel moored alongside, a hotel floor around a burnt-out ballroom, and switchgear aisles. Each has two stairwells,
+because one exit on a floor that size is spent walking.
+
 Two of them run a second clock beside the mission timer. On the boat the **hull** burns through while she is alight,
 so every seat of fire you leave is hull you do not get back. In the switch room the **line pressure** climbs with every
 valve still open and falls once they are all shut — leave it and the room goes, long before the mission timer matters.

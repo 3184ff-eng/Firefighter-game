@@ -9,59 +9,77 @@
 //   investigate a cold scene, no fire - read the evidence and call the origin
 //   contain     a plant room: valves down before the pressure takes the roof off
 
-const HOTEL_MAP = ['#############','#E..........#','#.##.##.##..#','#.##.##.##..#','#...........#','#.##.##.##..#','#.##.##.##..#','#...........#','#.##.##.##..#','#...........#','#############'];
-const RACK_MAP  = ['#############','#E..........#','#..##..##...#','#..##..##...#','#...........#','#..##..##...#','#..##..##...#','#...........#','#..##..##...#','#...........#','#############'];
+const FLATS_MAP = ['#####################','#E..................#','#.##.##.##.##.##.##.#','#.##.##.##.##.##.##.#','#...................#','#.##.##.##.##.##.##.#','#.##.##.##.##.##.##.#','#...................#','#.##.##.##.##.##.##.#','#.##.##.##.##.##.##.#','#...................#','#.##.##.##.##.##.##.#','#.##.##.##.##.##.##.#','#...................#','#####################'];
+const QUAY_MAP  = ['#####################','#E..................#','#...................#','#..####....####.....#','#..####....####.....#','#...................#','#....###########....#','#....#.........#....#','#....#.........#....#','#....###.###.###....#','#...................#','#..####....####.....#','#..####....####.....#','#...................#','#####################'];
+const HOTEL_MAP = ['#####################','#E..................#','#.##.##.##.##.##.##.#','#.##.##.##.##.##.##.#','#...................#','#.##.#.........#.##.#','#.##.#.........#.##.#','#....#.........#....#','#.##.#.........#.##.#','#.##.#.........#.##.#','#...................#','#.##.##.##.##.##.##.#','#.##.##.##.##.##.##.#','#...................#','#####################'];
+const PLANT_MAP = ['#####################','#E..................#','#.####.####.####.##.#','#.####.####.####.##.#','#...................#','#.####.####.####.##.#','#.####.####.####.##.#','#...................#','#.####.####.####.##.#','#.####.####.####.##.#','#...................#','#.####.####.####.##.#','#.####.####.####.##.#','#...................#','#####################'];
 
 export const MISSIONS = [
  {
   name:'Behind the door', place:'MARINER HOUSE · FLOOR 03', type:'rescue', kind:'apartment',
-  brief:'Search the apartments. Extinguish both fires and carry the residents to the green stairwell.',
-  time:96, color:0x809397,
-  map:['#############','#E..........#','#...#...#...#','#...#...#...#','#...#...#...#','#...........#','#...#...#...#','#...#...#...#','#...#...#...#','#...........#','#############'],
-  people:[[2.5,7.5],[10.5,3.5]], fires:[[5.5,3.5],[9.5,7.5]], task:null,
-  spread:34, spreadMax:2,
+  brief:'Four flats alight along the landings. Search every room, knock the fires down and carry all three residents to the green stairwell.',
+  time:135, color:0x809397, map:FLATS_MAP,
+  exits:[[1.5,1.5],[19.5,13.5]],
+  people:[[4.5,2.5],[16.5,8.5],[10.5,12.5]],
+  fires:[[7.5,5.5],[13.5,3.5],[19.5,11.5],[1.5,9.5]],
+  task:null,
+  spread:34, spreadMax:3,
  },
  {
   name:'Dead in the water', place:'QUAY FOUR · MOTOR YACHT ABIGAIL', type:'vessel', kind:'marina',
-  brief:'Fuel-fed fire below decks. Shut the fuel cock, get the skipper off, and knock it down before the hull burns through.',
-  time:110, color:0x5d7a86,
-  map:['#############','#E..........#','#.....#.....#','#.##..#..##.#','#.##.....##.#','#...........#','#.##.....##.#','#.##..#..##.#','#.....#.....#','#...........#','#############'],
-  people:[[4.5,2.5]], fires:[[7.5,4.5],[4.5,6.5],[10.5,8.5]],
-  task:{x:11.5,z:5.5,label:'Shut the fuel cock',done:'Fuel isolated — now knock it down before the hull goes.'},
-  gasFed:true, hullBurn:0.34, hullAfterShutoff:0.55, spread:30, spreadMax:2,
+  brief:'Fuel-fed fire aboard. Shut both fuel cocks, get the skipper and the deckhand off, and knock it down before the hull burns through.',
+  time:155, color:0x5d7a86, map:QUAY_MAP,
+  exits:[[1.5,1.5],[19.5,13.5]],
+  people:[[10.5,7.5],[17.5,2.5]],
+  fires:[[8.5,7.5],[3.5,5.5],[16.5,11.5],[12.5,13.5]],
+  task:null,
+  valves:[
+   {x:1.5,z:2.5,label:'Close the port fuel cock'},
+   {x:19.5,z:8.5,label:'Close the starboard fuel cock'},
+  ],
+  gasFed:true, hullBurn:0.26, hullAfterShutoff:0.55, spread:34, spreadMax:2,
  },
  {
   name:'Cause and origin', place:'THE GRAND HOTEL · THE MORNING AFTER', type:'investigate', kind:'burnt',
-  brief:'The fire is out and the building is yours until the scene is released. Read the burn pattern, work the evidence, then call the seat of the fire.',
-  time:105, color:0x4a4347,
-  map:HOTEL_MAP,
+  brief:'The fire is out and the building is yours until the scene is released. Work the floor, read the burn pattern, then call the seat of the fire.',
+  time:120, color:0x4a4347, map:HOTEL_MAP,
+  exits:[[1.5,1.5],[19.5,13.5]],
   people:[], fires:[], task:null,
   evidence:[
    {x:4.5,z:2.5,label:'Examine the scorched outlet',note:'Outlet melted from inside the wall, not from the room side.'},
-   {x:7.5,z:8.5,label:'Examine the door frame',note:'Clean burn line low on the frame — the fire ran along the floor.'},
-   {x:11.5,z:5.5,label:'Examine the ceiling void',note:'The void is barely touched. Nothing dropped from up there.'},
+   {x:16.5,z:2.5,label:'Examine the door frame',note:'Clean burn line low on the frame — the fire ran along the floor.'},
+   {x:10.5,z:7.5,label:'Examine the ballroom ceiling',note:'The ballroom void is barely touched. Nothing dropped from up there.'},
+   {x:1.5,z:11.5,label:'Examine the linen chute',note:'Chute is sooted from below, so the smoke came up it rather than down.'},
+   {x:19.5,z:5.5,label:'Examine the riser cupboard',note:'Cabling into the east rooms is beaded and brittle. It was live when it burned.'},
   ],
   origins:[
-   {x:1.5,z:6.5,label:'Call it: linen store'},
-   {x:10.5,z:2.5,label:'Call it: room 612 wall cavity',correct:true},
-   {x:4.5,z:8.5,label:'Call it: stair lobby'},
+   {x:7.5,z:12.5,label:'Call it: laundry'},
+   {x:13.5,z:2.5,label:'Call it: room 1204 wall cavity',correct:true},
+   {x:10.5,z:5.5,label:'Call it: ballroom stage'},
+   {x:1.5,z:8.5,label:'Call it: stair lobby'},
   ],
   spread:0,
  },
  {
   name:'Live load', place:'RIVERSIDE TOWER · SWITCH ROOM', type:'contain', kind:'plant',
-  brief:'Gas is feeding a switch-room fire and the line pressure is climbing. Close all three valves, get the engineers out, then put it out.',
-  time:128, color:0x6b6350,
-  map:RACK_MAP,
-  people:[[5.5,5.5],[11.5,8.5]], fires:[[6.5,4.5],[2.5,7.5]], task:null,
+  brief:'Gas is feeding a switch-room fire and the line pressure is climbing. Close all four valves, get the engineers out, then put it out.',
+  time:170, color:0x6b6350, map:PLANT_MAP,
+  exits:[[1.5,1.5],[19.5,13.5]],
+  people:[[6.5,2.5],[16.5,8.5],[11.5,12.5]],
+  fires:[[1.5,5.5],[19.5,2.5],[10.5,10.5]],
+  task:null,
   valves:[
-   {x:2.5,z:2.5,label:'Close valve A'},
-   {x:10.5,z:2.5,label:'Close valve B'},
-   {x:6.5,z:9.5,label:'Close valve C'},
+   {x:6.5,z:5.5,label:'Close valve A'},
+   {x:11.5,z:8.5,label:'Close valve B'},
+   {x:16.5,z:11.5,label:'Close valve C'},
+   {x:1.5,z:13.5,label:'Close valve D'},
   ],
-  gasFed:true, pressureRise:1.45, spread:28, spreadMax:3,
+  gasFed:true, pressureRise:1.1, spread:30, spreadMax:3,
  },
 ];
+
+export const exitsOf = m => m.exits ?? [[1.5, 1.5]];
+export const atExit = s => exitsOf(s.m).some(([x, z]) => Math.hypot(s.x - x, s.z - z) < 1);
 
 export function createMission(i, bonusSeconds = 0) {
   const m = MISSIONS[i];
@@ -185,7 +203,7 @@ function hose(s, k, dt) {
     const diff = Math.atan2(Math.sin(angle - s.yaw), Math.cos(angle - s.yaw));
     if (fire.heat > 0 && d < 5 && Math.abs(diff) < .24 && Math.abs(s.pitch) < .65 && clearLine(s, fire.x, fire.z)) {
       // A fuel- or gas-fed fire will not go out while it is still being fed.
-      const fed = s.m.gasFed && (s.valves.length ? s.valves.some(v => !v.closed) : !s.taskDone);
+      const fed = s.m.gasFed && !fuelIsolated(s);
       fire.heat = Math.max(fed ? 20 : 0, fire.heat - dt * 45);
       if (fire.heat === 0) { s.score += 100; s.message = 'Fire knocked down.'; }
     }
@@ -201,7 +219,7 @@ function spread(s, dt) {
   if (!source || s.spreadCount >= (s.m.spreadMax ?? 3) || s.time <= 45) return;
   const spots = [[2,0],[-2,0],[0,2],[0,-2],[2,2],[-2,-2],[2,-2],[-2,2]]
     .map(([dx, dz]) => ({x:source.x + dx, z:source.z + dz}))
-    .filter(q => !wall(s, q.x, q.z) && Math.hypot(q.x - 1.5, q.z - 1.5) > 2.5
+    .filter(q => !wall(s, q.x, q.z) && exitsOf(s.m).every(([ex, ez]) => Math.hypot(q.x - ex, q.z - ez) > 2.5)
               && !s.fires.some(f => Math.hypot(f.x - q.x, f.z - q.z) < 1.4));
   if (!spots.length) return;
   const q = spots[Math.floor(Math.random() * spots.length)];
@@ -211,10 +229,12 @@ function spread(s, dt) {
 }
 
 const burning = s => s.fires.filter(f => f.heat > 0).length;
+// Fuel is isolated either by the one-off task or by closing every valve.
+export const fuelIsolated = s => (s.valves.length ? s.valves.every(v => v.closed) : s.taskDone);
 
 const WIN = {
   rescue: s => s.saved === s.people.length && s.fires.every(f => f.heat === 0) && s.taskDone,
-  vessel: s => s.saved === s.people.length && s.fires.every(f => f.heat === 0) && s.taskDone && s.hull > 0,
+  vessel: s => s.saved === s.people.length && s.fires.every(f => f.heat === 0) && fuelIsolated(s) && s.hull > 0,
   contain: s => s.saved === s.people.length && s.fires.every(f => f.heat === 0) && s.valves.every(v => v.closed),
   investigate: s => s.solved,
 };
@@ -230,12 +250,12 @@ export function tick(s, k, dt) {
   if (!cold) {
     hose(s, k, dt);
     const danger = s.fires.filter(f => f.heat > 0 && Math.hypot(f.x - s.x, f.z - s.z) < 1.25 && clearLine(s, f.x, f.z)).length;
-    s.air = Math.max(0, s.air - dt * (.24 + danger * 12));
+    s.air = Math.max(0, s.air - dt * (.17 + danger * 12));
   } else {
     s.air = Math.max(0, s.air - dt * .12);   // still masked up in a burnt-out building
   }
 
-  if (Math.hypot(s.x - 1.5, s.z - 1.5) < 1) {
+  if (atExit(s)) {
     s.air = Math.min(100, s.air + dt * 45);
     s.water = Math.min(100, s.water + dt * 55);
     if (s.carry !== null) {
@@ -252,7 +272,7 @@ export function tick(s, k, dt) {
   if (s.m.type === 'vessel' && burning(s)) {
     // Isolating the fuel does not just unlock extinguishing, it slows what the
     // fire is doing to the hull - so the right first move visibly pays off.
-    const fed = s.taskDone ? s.m.hullAfterShutoff : 1;
+    const fed = fuelIsolated(s) ? s.m.hullAfterShutoff : 1;
     s.hull = Math.max(0, s.hull - dt * s.m.hullBurn * burning(s) * fed);
     if (s.hull <= 0) { s.status = 'lost'; s.message = 'The hull burned through. Abigail is on the bottom of the harbour.'; return; }
     if (s.hull < 35 && !s.hullWarned) { s.hullWarned = true; s.message = 'Hull integrity critical — she will not take much more.'; }
