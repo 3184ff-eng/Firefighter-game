@@ -63,9 +63,20 @@ function standOff(s, fire, want = 2.4) {
     if (!clearLine(s, fire.x, fire.z)) { s.x = back.x; s.z = back.z; return; }
   }
 }
+// Approach only until the fire is both in range and visible. Walking onto it
+// first costs 12 air a second, which is the bot killing itself, not the game.
+function walkNear(s, to, stop) {
+  const cells = path(s, to) || [];
+  const near = () => Math.hypot(to.x - s.x, to.z - s.z) <= stop && clearLine(s, to.x, to.z);
+  for (const [cx, cz] of cells) {
+    if (near()) return;
+    let n = 0;
+    while (Math.hypot(cx + .5 - s.x, cz + .5 - s.z) > .3 && n++ < 400 && s.status === 'playing' && !near()) stepToward(s, cx + .5, cz + .5);
+  }
+}
 function douse(s, fire) {
   for (let attempt = 0; attempt < 6 && fire.heat > 0 && s.status === 'playing'; attempt++) {
-    walkTo(s, fire);
+    walkNear(s, fire, 2.5);
     standOff(s, fire);
     faceAnd(s, fire, {spray:true}, () => fire.heat === 0 || s.water < 4);
     if (s.water < 4) { walkTo(s, {x:1.5, z:1.5}); faceAnd(s, {x:1.5,z:1.5}, {}, () => s.water > 95, 4000); }
@@ -114,8 +125,13 @@ test('every objective is reachable from the entry on all four plans',()=>{
   }
 });
 
-test('the interior clocks are all well under the old four-to-five minutes',()=>{
-  for (const m of MISSIONS) assert.ok(m.time <= 130, `${m.name} is ${m.time}s`);
+test('the clocks stay well under the old four-to-five minutes, and the areas are big',()=>{
+  for (const m of MISSIONS) {
+    assert.ok(m.time <= 200, `${m.name} is ${m.time}s`);
+    const w = m.map[0].length, h = m.map.length;
+    assert.ok(w * h >= 300, `${m.name} is only ${w}x${h}`);
+    assert.ok(m.map.every(r => r.length === w), `${m.name} has a ragged plan`);
+  }
 });
 
 test('each mission is completable, by doing its own job, inside its own clock',()=>{
@@ -141,7 +157,8 @@ test('walls block movement and the hose',()=>{
 test('a casualty is counted only on delivery, never twice',()=>{
   const s = createMission(0);
   interact(s); assert.equal(s.carry, null, 'nothing to pick up at the door');
-  s.x = 2.5; s.z = 7.5; interact(s);
+  const first = s.people[0];
+  s.x = first.x; s.z = first.z; interact(s);
   assert.equal(s.carry, 0); assert.equal(s.saved, 0);
   s.x = 1.5; s.z = 1.5; tick(s, {}, .05);
   assert.equal(s.saved, 1);
@@ -206,12 +223,12 @@ test('the hull burns through on its own clock, and only while she is alight',()=
 test('a fuel-fed fire will not go out until the cock is shut',()=>{
   const s = createMission(1);
   const fire = s.fires[0];
-  walkTo(s, fire);
+  walkTo(s, fire); standOff(s, fire);
   faceAnd(s, fire, {spray:true}, () => fire.heat <= 20);
-  assert.equal(fire.heat, 20, 'it floors at 20 while still being fed');
-  useAt(s, s.m.task);
-  assert.ok(s.taskDone);
-  walkTo(s, fire); standOff(s, fire);   // the cock is across the boat from the seat of fire
+  assert.equal(fire.heat, 20, 'it floors at 20 while any cock is still open');
+  for (const v of s.valves) { useAt(s, v); }
+  assert.ok(s.valves.every(v => v.closed), 'both cocks shut');
+  walkTo(s, fire); standOff(s, fire);   // the cocks are at opposite ends of the boat
   faceAnd(s, fire, {spray:true}, () => fire.heat === 0);
   assert.equal(fire.heat, 0);
 });
@@ -329,10 +346,14 @@ test('evidence can be examined from where you actually stand',()=>{
   // the door frame, which the old 1.4 reach rejected with no hint you were
   // close. Pinned to that exact position.
   const s = createMission(2);
-  s.x = 7.28; s.z = 7.01;
-  const frame = s.evidence.find(e => e.label.includes('door frame'));
-  assert.ok(Math.hypot(frame.x - s.x, frame.z - s.z) > 1.4, 'the spot really is outside the old reach');
-  assert.equal(nearby(s)?.type, 'evidence', 'and it is offered now');
+  // Stand 1.55 short of each marker - inside the new reach, outside the old -
+  // approaching down an open column so nothing is in the way.
+  for (const e of s.evidence) {
+    s.x = e.x; s.z = e.z - 1.55;
+    if (wall(s, s.x, s.z)) continue;            // not every marker has clear floor north of it
+    assert.ok(Math.hypot(e.x - s.x, e.z - s.z) > 1.4, 'the spot really is outside the old reach');
+    assert.equal(nearby(s)?.type, 'evidence', `${e.label} is offered from 1.55 away`);
+  }
   assert.ok(EXAMINE_REACH > 1.4);
 });
 
@@ -372,14 +393,19 @@ test('the hull is the real clock on the boat, and isolating the fuel buys most o
   const clock = MISSIONS[1].time;
   const survives = shut => {
     const s = createMission(1);
-    if (shut) s.taskDone = true;
+    if (shut) s.valves.forEach(v => v.closed = true);
     let t = 0;
     while (s.status === 'playing' && s.hull > 0 && t < 600) { tick(s, {}, 1/60); t += 1/60; }
     return t;
   };
   const open = survives(false), shut = survives(true);
-  assert.ok(open > clock * 0.55, `she must not sink in a fraction of the mission (${open.toFixed(0)}s of ${clock}s)`);
-  assert.ok(shut > open * 1.3, `shutting the fuel off must visibly slow the burn (${open.toFixed(0)}s -> ${shut.toFixed(0)}s)`);
+  // Three separate guarantees, which is what the original defect broke:
+  //   1. doing the right thing first nearly covers the whole mission,
+  //   2. doing it is visible on the meter rather than silent,
+  //   3. and you are never dead before you could plausibly have acted.
+  assert.ok(shut > clock * 0.8, `isolated, the hull must nearly cover the mission (${shut.toFixed(0)}s of ${clock}s)`);
+  assert.ok(shut > open * 1.4, `isolating the fuel must visibly slow the burn (${open.toFixed(0)}s -> ${shut.toFixed(0)}s)`);
+  assert.ok(open > clock * 0.45, `and she must not sink before you could cross the boat (${open.toFixed(0)}s of ${clock}s)`);
 });
 
 test('the hull only burns while something is actually alight',()=>{
