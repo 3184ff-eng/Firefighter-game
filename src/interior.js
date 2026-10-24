@@ -1,4 +1,4 @@
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../vendor/three.module.min.js';
 import {MISSIONS,createMission,tick,interact,nearby,wall,clearLine} from './interior-model.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),keys={},reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let state=createMission(0),selected=0,mode='menu',last=performance.now(),elapsed=0,thermal=false,sound=false,audio,renderer,scene,camera,torch,ambient,world,people=[],fires=[],lamps=[],water=[],debris=[],taskMesh,exitRing,collapseScene,collapseCamera,collapseFloors=[],collapseDust=[],lastMessage='',save={};
