@@ -14,6 +14,16 @@ Open index.html through an HTTP server. WASD moves; drag the scene to look; arro
 | 03 | The Grand Hotel | Room to room — hotel corridor, vent the roof hatch |
 | 04 | Last Light Tower | Lights out — garage, restore emergency power |
 
+## Exterior preludes
+
+Pick one of four responders before the call. They are original characters, not licensed likenesses, and the pick is a
+trade-off rather than a skin: Engine 04 is the baseline, Sentinel climbs far faster, Nightwatch breathes nearly twice
+as long but moves heavy, Highline is quickest on foot and burns air fastest.
+
+You cannot carry a civilian through live fire. Knock it down first, and fight it from a stand-off - crowd a hot fire
+with the hose and it flares back at you, costing air instead of knocking it down. Fire now spreads on every incident,
+though never close enough to seal off a ladder. The clocks are roughly a third of what they were.
+
 Stars earned on the prelude are added to the interior clock: one star +10s, two +20s, three +30s. Fires inside spread
 on a timer that shortens with each spread, so neglect compounds; the teaching level escalates least and the final
 level most. Spread is bounded — a capped number of new seats, never beside the stairwell, never inside a wall, never
