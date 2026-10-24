@@ -364,3 +364,28 @@ test('a wider examine reach stays unambiguous and still respects walls',()=>{
   // movement test above; this map has no open spot both within reach of a
   // marker and blocked from it, so there is nothing honest to assert here.
 });
+
+test('the hull is the real clock on the boat, and isolating the fuel buys most of it back',()=>{
+  // Found by playing it: at the old burn rate she sank after 57s with 83s
+  // still showing on the mission timer, so the clock the player watches was
+  // not the clock that killed them.
+  const clock = MISSIONS[1].time;
+  const survives = shut => {
+    const s = createMission(1);
+    if (shut) s.taskDone = true;
+    let t = 0;
+    while (s.status === 'playing' && s.hull > 0 && t < 600) { tick(s, {}, 1/60); t += 1/60; }
+    return t;
+  };
+  const open = survives(false), shut = survives(true);
+  assert.ok(open > clock * 0.55, `she must not sink in a fraction of the mission (${open.toFixed(0)}s of ${clock}s)`);
+  assert.ok(shut > open * 1.3, `shutting the fuel off must visibly slow the burn (${open.toFixed(0)}s -> ${shut.toFixed(0)}s)`);
+});
+
+test('the hull only burns while something is actually alight',()=>{
+  const s = createMission(1);
+  s.fires.forEach(f => f.heat = 0);
+  const before = s.hull;
+  for (let k = 0; k < 600; k++) tick(s, {}, 1/60);
+  assert.equal(s.hull, before);
+});

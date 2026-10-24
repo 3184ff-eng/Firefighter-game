@@ -28,7 +28,7 @@ export const MISSIONS = [
   map:['#############','#E..........#','#.....#.....#','#.##..#..##.#','#.##.....##.#','#...........#','#.##.....##.#','#.##..#..##.#','#.....#.....#','#...........#','#############'],
   people:[[4.5,2.5]], fires:[[7.5,4.5],[4.5,6.5],[10.5,8.5]],
   task:{x:11.5,z:5.5,label:'Shut the fuel cock',done:'Fuel isolated — now knock it down before the hull goes.'},
-  gasFed:true, hullBurn:0.5, spread:30, spreadMax:2,
+  gasFed:true, hullBurn:0.34, hullAfterShutoff:0.55, spread:30, spreadMax:2,
  },
  {
   name:'Cause and origin', place:'THE GRAND HOTEL · THE MORNING AFTER', type:'investigate', kind:'burnt',
@@ -250,7 +250,10 @@ export function tick(s, k, dt) {
   // The hull and the gas line are second clocks, and each runs only while the
   // thing driving it is still live.
   if (s.m.type === 'vessel' && burning(s)) {
-    s.hull = Math.max(0, s.hull - dt * s.m.hullBurn * burning(s));
+    // Isolating the fuel does not just unlock extinguishing, it slows what the
+    // fire is doing to the hull - so the right first move visibly pays off.
+    const fed = s.taskDone ? s.m.hullAfterShutoff : 1;
+    s.hull = Math.max(0, s.hull - dt * s.m.hullBurn * burning(s) * fed);
     if (s.hull <= 0) { s.status = 'lost'; s.message = 'The hull burned through. Abigail is on the bottom of the harbour.'; return; }
     if (s.hull < 35 && !s.hullWarned) { s.hullWarned = true; s.message = 'Hull integrity critical — she will not take much more.'; }
   }
