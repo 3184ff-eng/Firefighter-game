@@ -7,27 +7,22 @@ Open index.html through an HTTP server. WASD moves; drag the scene to look; arro
 
 ## Levels
 
-| # | Prelude (exterior) | Interior |
-|---|---|---|
-| 01 | Mariner House | Behind the door — apartment search and rescue |
-| 02 | Market Street | Pressure point — warehouse, isolate the gas before full suppression |
-| 03 | The Grand Hotel | Room to room — hotel corridor, vent the roof hatch |
-| 04 | Last Light Tower | Lights out — garage, restore emergency power |
+Each level is a different building **and** a different job. The shared parts are movement, the hose, air and the
+stairwell; what counts as winning, what kills you and what `E` does all come from the mission's type.
 
-## Exterior preludes
+| # | Prelude (exterior) | Interior | Job |
+|---|---|---|---|
+| 01 | Mariner House | Behind the door | **Search & rescue** — everyone out, fire out |
+| 02 | Quay Four | Dead in the water | **Vessel fire** — shut the fuel cock and save the hull |
+| 03 | The Grand Hotel | Cause and origin | **Fire investigation** — a cold scene, read it and call the origin |
+| 04 | Last Light Tower | Live load | **Gas containment** — valves down before the line goes |
 
-Pick one of four responders before the call. They are original characters, not licensed likenesses, and the pick is a
-trade-off rather than a skin: Engine 04 is the baseline, Sentinel climbs far faster, Nightwatch breathes nearly twice
-as long but moves heavy, Highline is quickest on foot and burns air fastest.
+Two of them run a second clock beside the mission timer. On the boat the **hull** burns through while she is alight,
+so every seat of fire you leave is hull you do not get back. In the switch room the **line pressure** climbs with every
+valve still open and falls once they are all shut — leave it and the room goes, long before the mission timer matters.
 
-You cannot carry a civilian through live fire. Knock it down first, and fight it from a stand-off - crowd a hot fire
-with the hose and it flares back at you, costing air instead of knocking it down. Fire now spreads on every incident,
-though never close enough to seal off a ladder. The clocks are roughly a third of what they were.
-
-Stars earned on the prelude are added to the interior clock: one star +10s, two +20s, three +30s. Fires inside spread
-on a timer that shortens with each spread, so neglect compounds; the teaching level escalates least and the final
-level most. Spread is bounded — a capped number of new seats, never beside the stairwell, never inside a wall, never
-in the last 45 seconds and never once the building is clear.
+The investigation has no fire at all. Examine all three pieces of evidence, then stand at the seat you believe it
+started and call it. Two wrong calls and the scene is released as undetermined.
 
 Progress lives in `unsung-heroes-campaign-v1`. Saves from before the campaign restructure are migrated on first load.
 

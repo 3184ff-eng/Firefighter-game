@@ -5,10 +5,10 @@
 // pages, so the only thing they share is this module and one storage key.
 
 export const LEVELS = [
-  { name: 'Mariner House',   district: 'DOCKSIDE',    exterior: 0, interior: 0 },
-  { name: 'Market Street',   district: 'OLD TOWN',    exterior: 1, interior: 1 },
-  { name: 'The Grand Hotel', district: 'CITY CENTRE', exterior: 2, interior: 3 },
-  { name: 'Last Light Tower',district: 'RIVERSIDE',   exterior: 3, interior: 2 },
+  { name: 'Mariner House',    district: 'DOCKSIDE',    job: 'SEARCH & RESCUE',     exterior: 0, interior: 0 },
+  { name: 'Quay Four',        district: 'HARBOUR',     job: 'VESSEL FIRE',         exterior: 1, interior: 1 },
+  { name: 'The Grand Hotel',  district: 'CITY CENTRE', job: 'FIRE INVESTIGATION',  exterior: 2, interior: 2 },
+  { name: 'Last Light Tower', district: 'RIVERSIDE',   job: 'GAS CONTAINMENT',     exterior: 3, interior: 3 },
 ];
 
 const KEY = 'unsung-heroes-campaign-v1';
