@@ -21,10 +21,43 @@ function resume(){if(mode!=='paused')return;mode='playing';$('pause-panel').hidd
 function result(reason){clear();mode='result';$('pause').disabled=true;$('overlay').hidden=false;const won=game.status==='won',stars=won?grade(game):0;const handOff=fromLevel!==null&&levelForExterior(selected)===fromLevel;if(won){progress.best[selected]=Math.max(progress.best[selected],game.score);progress.stars[selected]=Math.max(progress.stars[selected],stars);progress.unlocked=Math.max(progress.unlocked,Math.min(3,selected+1));save();const lvl=levelForExterior(selected);if(lvl>=0){record(campaign,'exterior',lvl,game.score,stars);persist(campaign);}chime()}else tone(130,.6,'triangle');$('panel').innerHTML=`<div class="result"><span class="hero-kicker">${won?'ENGINE 04 · INCIDENT CLEAR':'ENGINE 04 · REGROUP'}</span><h2>${won?'Everyone home.':'Another way in.'}</h2><div class="stars">${won?'★'.repeat(stars)+'☆'.repeat(3-stars):'Ⅱ'}</div><p>${won?(selected===3?'All four incidents cleared. Replay any mission to improve your time and earn three stars.':'Your crew made the difference. Faster rescues earn more stars.'):reason}</p><div class="result-stats"><span><b>${game.saved}/${game.victims.length}</b><small>PEOPLE SAFE</small></span><span><b>${game.score}</b><small>SCORE</small></span><span><b>${game.suppressed}</b><small>FIRES OUT</small></span></div><div class="result-actions"><button id="next" class="primary">${won&&handOff?'Enter the building →':won&&selected<3?'Next incident →':'Try this mission again'}</button><button id="back-menu">${handOff?'Back to the campaign':'Mission select'}</button></div></div>`;$('next').onclick=()=>{if(won&&handOff){location.href='index.html?level='+fromLevel;return;}if(won&&selected<3)selected++;start()};$('back-menu').onclick=()=>{if(handOff){location.href='index.html';return;}menu();};$('next').focus({preventScroll:true});hud()}
 function events(){for(const ev of game.events.splice(0)){if(['extinguish','saved'].includes(ev.type)){render.burst(ev.x,ev.y,ev.type);tone(ev.type==='saved'?780:330,.25);toast(ev.text)}else if(ev.type==='pickup'){tone(520,.12);toast(ev.text)}else if(ev.type==='blocked'){tone(150,.18,'square',.03);toast(ev.text)}else if(ev.type==='flare'){render.burst(ev.x,ev.y,'flare');render.shake=Math.min(10,(render.shake||0)+6);tone(110,.35,'sawtooth',.04);toast(ev.text)}else if(ev.type==='win')result();else if(ev.type==='lose')result(ev.text);else if(ev.text)toast(ev.text)}}
 function act(){if(mode!=='playing')return;interact(game);events();hud()}
-function hold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{if(mode!=='playing')return;e.preventDefault();el.setPointerCapture(e.pointerId);keys[key]=true;el.classList.add('held');if(key==='spray')tone(180,.15,'triangle',.025)});const release=()=>{keys[key]=false;el.classList.remove('held')};['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,release))}
+function hold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{if(mode!=='playing')return;e.preventDefault();keys[key]=true;el.classList.add('held');try{el.setPointerCapture(e.pointerId);}catch{}if(key==='spray')tone(180,.15,'triangle',.025)});const release=()=>{keys[key]=false;el.classList.remove('held')};['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,release))}
+if(matchMedia('(pointer:coarse)').matches){
+ const holder=document.createElement('div');holder.id='touch-actions';
+ holder.appendChild($('hose'));holder.appendChild($('rescue'));
+ $('viewport').appendChild(holder);document.body.classList.add('touch');
+}
 hold('left','left');hold('right','right');hold('up','up');hold('down','down');hold('hose','spray');$('rescue').onclick=act;$('pause').onclick=pause;$('resume').onclick=resume;$('pause-restart').onclick=start;$('pause-menu').onclick=menu;$('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',sound);tone(660,.2)};
 const keymap={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',' ':'spray'};
 window.addEventListener('keydown',e=>{const key=e.key.length===1?e.key.toLowerCase():e.key;if(key==='p'||key==='Escape'){if(mode==='playing'){e.preventDefault();pause()}else if(mode==='paused'){e.preventDefault();resume()}return}if(mode!=='playing')return;if(keymap[key]){e.preventDefault();keys[keymap[key]]=true}if(key==='e'&&!e.repeat){e.preventDefault();act()}});window.addEventListener('keyup',e=>{const key=e.key.length===1?e.key.toLowerCase():e.key;if(keymap[key])keys[keymap[key]]=false});window.addEventListener('blur',()=>{clear();pause()});document.addEventListener('visibilitychange',()=>{if(document.hidden){clear();pause()}});
 $('help').onclick=()=>{const was=mode;if(mode==='playing')pause();mode='help';clear();$('pause-panel').hidden=true;$('overlay').hidden=false;$('panel').innerHTML='<div class="result"><span class="hero-kicker">YOUR FIRST RESPONSE</span><h2>Get everyone out.</h2><div class="help-grid"><p><b>01 · CLIMB</b>Move to either silver ladder. Hold ↑ or W. At a numbered floor, move left or right to step inside.</p><p><b>02 · CLEAR FIRE</b>Face the flames. Hold SPRAY or Space. Keep your distance: heat drains your air.</p><p><b>03 · PICK UP</b>Move next to a waving civilian. Press E or tap RESCUE. You carry one person at a time.</p><p><b>04 · RETURN</b>Go down a ladder and walk to the engine’s green safe zone. Delivery is automatic. Air and water refill there.</p></div><p>Three stars: finish with over half your time remaining. Two stars: finish with over a quarter remaining.</p><button id="close-help" class="primary">Got it</button></div>';$('close-help').onclick=()=>{if(was==='playing'||was==='paused'){$('overlay').hidden=true;mode='paused';$('pause-panel').hidden=false;if(was==='playing')resume()}else if(was==='result')result(game.p.air<=0?'Your air ran out. Refill at the engine.':'Time ran out. Plan a shorter route.');else menu()}};
+/* --- touch thumbstick ---------------------------------------------------
+   Same floating stick as the interior: thumb down anywhere on the canvas and
+   it appears there. Left and right walk, up and down work the ladder. */
+(()=>{
+ const vp=$('viewport');if(!vp)return;
+ const stick=document.createElement('div');stick.id='stick';
+ const knob=document.createElement('div');knob.id='stick-knob';
+ stick.appendChild(knob);vp.appendChild(stick);
+ const R=56,DEAD=.28;let id=null,from=null;
+ const release=()=>{id=null;stick.classList.remove('on');knob.style.transform='translate(-50%,-50%)';
+  keys.left=keys.right=keys.up=keys.down=false;};
+ const to=(dx,dy)=>{const m=Math.hypot(dx,dy);if(m>R){dx*=R/m;dy*=R/m;}
+  knob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  const ax=dx/R,ay=-dy/R;
+  keys.left=ax<-DEAD;keys.right=ax>DEAD;keys.up=ay>DEAD;keys.down=ay<-DEAD;};
+ canvas.addEventListener('pointerdown',e=>{
+  if(mode!=='playing'||e.pointerType!=='touch'||id!==null)return;
+  const r=vp.getBoundingClientRect();
+  id=e.pointerId;from={x:e.clientX,y:e.clientY};
+  stick.style.left=(e.clientX-r.left)+'px';stick.style.top=(e.clientY-r.top)+'px';
+  stick.classList.add('on');to(0,0);
+  try{canvas.setPointerCapture(e.pointerId);}catch{}
+ });
+ canvas.addEventListener('pointermove',e=>{if(e.pointerId===id)to(e.clientX-from.x,e.clientY-from.y);});
+ for(const ev of ['pointerup','pointercancel','lostpointercapture'])
+  canvas.addEventListener(ev,e=>{if(e.pointerId===id)release();});
+ window.addEventListener('blur',release);
+})();
 new ResizeObserver(()=>render.resize()).observe($('viewport'));function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;frameTime+=dt;if(mode==='playing'){step(game,keys,dt);events();}render.draw(game,frameTime,dt);hud();requestAnimationFrame(loop)}if(fromLevel!==null){selected=LEVELS[fromLevel].exterior;chooseCrew(start);}else menu();requestAnimationFrame(loop);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
