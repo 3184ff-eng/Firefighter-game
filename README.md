@@ -35,3 +35,8 @@ Fires in the second and third missions spread to nearby cells over time, so a sl
 Timeout triggers a five-second exterior collapse animation before results. Best scores stay in local storage. Existing exterior mission saves are retained. WebGL support is required for 3D; classic.html provides the 2D missions.
 
 Fictional arcade game, not operational training.
+
+## Mobile field kit
+Settings offers Auto/Battery saver/High detail graphics, automatic or explicit touchscreen controls, and look sensitivity. Touch controls support a left floating analog stick with a dead zone; the right side looks around, and holding then dragging the hose button aims while spraying. Settings pause the mission. Both safe exits appear on the map. Portrait and landscape layouts retain the mission timer and secondary hull/pressure readings. Texture anisotropy, readable civilian details and a visible gloved hose hand improve presentation; a nearby-light budget and reduced water particles in Battery saver limit rendering cost.
+
+Validation: 53 tests pass, including the existing campaign/exterior/interior tests and four new input/graphics tests. Browser checks used 390x844 portrait and 844x390 landscape fixtures; no horizontal overflow was measured, held spray consumed water, settings persisted, and the canvas remained aligned after menu navigation. Fixtures were removed. Physical iOS/Android multi-touch and GPU performance still require device testing.
