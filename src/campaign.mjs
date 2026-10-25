@@ -9,6 +9,9 @@ export const LEVELS = [
   { name: 'Quay Four',        district: 'HARBOUR',     job: 'VESSEL FIRE',         exterior: 1, interior: 1 },
   { name: 'The Grand Hotel',  district: 'CITY CENTRE', job: 'FIRE INVESTIGATION',  exterior: 2, interior: 2 },
   { name: 'Last Light Tower', district: 'RIVERSIDE',   job: 'GAS CONTAINMENT',     exterior: 3, interior: 3 },
+  {name:'Waterworks',district:'WEST BANK',job:'PUMP & RESCUE',exterior:4,interior:4},
+  {name:'Ashes & Alibis',district:'OLD QUARTER',job:'EVIDENCE LAB',exterior:5,interior:5},
+  {name:'Freight Terminal',district:'RAIL YARD',job:'SYSTEMS & RESCUE',exterior:6,interior:6},
 ];
 
 const KEY = 'unsung-heroes-campaign-v1';

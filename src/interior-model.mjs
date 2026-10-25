@@ -1,3 +1,4 @@
+import {HOTEL_PUZZLES,ARCHIVE_PUZZLES,PUMP_PUZZLES,DEPOT_PUZZLES,puzzlesComplete} from './puzzles.mjs';
 // Interior missions.
 //
 // Each level is a different building AND a different job. The shared parts are
@@ -41,16 +42,17 @@ export const MISSIONS = [
  },
  {
   name:'Cause and origin', place:'THE GRAND HOTEL · THE MORNING AFTER', type:'investigate', kind:'burnt',
-  brief:'The fire is out and the building is yours until the scene is released. Work the floor, read the burn pattern, then call the seat of the fire.',
-  time:120, color:0x4a4347, map:HOTEL_MAP,
+  brief:'Document five records, open the casebook and solve four reasoning puzzles. Then mark the supported origin area. Cause and origin are separate findings.',
+  puzzles:HOTEL_PUZZLES, conclusion:'Origin area: room 1204 wall cavity. Cause: Undetermined. Ignition mechanism not established.',
+  time:190, color:0x4a4347, map:HOTEL_MAP,
   exits:[[1.5,1.5],[19.5,13.5]],
   people:[], fires:[], task:null,
   evidence:[
-   {x:4.5,z:2.5,label:'Examine the scorched outlet',note:'Outlet melted from inside the wall, not from the room side.'},
-   {x:16.5,z:2.5,label:'Examine the door frame',note:'Clean burn line low on the frame — the fire ran along the floor.'},
-   {x:10.5,z:7.5,label:'Examine the ballroom ceiling',note:'The ballroom void is barely touched. Nothing dropped from up there.'},
-   {x:1.5,z:11.5,label:'Examine the linen chute',note:'Chute is sooted from below, so the smoke came up it rather than down.'},
-   {x:19.5,z:5.5,label:'Examine the riser cupboard',note:'Cabling into the east rooms is beaded and brittle. It was live when it burned.'},
+   {x:4.5,z:2.5,label:'Document the room 1204 survey',note:'Scene survey: damage is concentrated in the room 1204 wall cavity. This supports an origin-area hypothesis, not a specific cause.'},
+   {x:16.5,z:2.5,label:'Read the guest interview',note:'Guest statement: smoke emerged at the room 1204 wall at 22:12. This is received information, not your direct observation.'},
+   {x:10.5,z:7.5,label:'Review the alarm log',note:'System record: lobby detector activated at 22:16. The ballroom detector activated later. Detector order alone cannot prove origin.'},
+   {x:1.5,z:11.5,label:'Review the arrival record',note:'Dispatch record: crew arrived at 22:21. No reliable witness saw ignition. Keep the ignition time unknown.'},
+   {x:19.5,z:5.5,label:'Read the electrical lab note',note:'Power trip: 22:14. Lab: wiring damage may be an effect of fire; no pre-fire electrical defect established. Competing ignition causes remain unresolved.'},
   ],
   origins:[
    {x:7.5,z:12.5,label:'Call it: laundry'},
@@ -76,6 +78,33 @@ export const MISSIONS = [
   ],
   gasFed:true, pressureRise:1.1, spread:30, spreadMax:3,
  },
+ {
+  name:'Restore the lifeline',place:'WATERWORKS · PUMP HALL',type:'rescue',kind:'plant',
+  brief:'Find the blue pump terminal beside the entry. Trace the supply and balance its branches to restore suppression. Search for two trapped technicians and extinguish the fires.',
+  time:190,color:0x396e7a,map:QUAY_MAP,exits:[[1.5,1.5],[19.5,13.5]],
+  people:[[10.5,7.5],[17.5,11.5]],fires:[[3.5,5.5],[16.5,10.5],[12.5,13.5]],
+  puzzles:PUMP_PUZZLES,terminal:{x:3.5,z:1.5},puzzleFed:true,spread:38,spreadMax:2,
+ },
+ {
+  name:'Ashes & alibis',place:'CITY ARCHIVE · CASE A-03',type:'investigate',kind:'burnt',
+  brief:'A second case, a different explanation. Recover five records, reconstruct the timeline, flag a custody gap and test the ignition hypothesis. Solve all four casebook puzzles, then mark the origin.',
+  time:195,color:0x645463,map:QUAY_MAP,exits:[[1.5,1.5],[19.5,13.5]],people:[],fires:[],spread:0,
+  puzzles:ARCHIVE_PUZZLES,conclusion:'Origin: archive cabinet. Cause: Accidental, supported by the fictional lab finding. Missing transfer signature remains a recorded limitation.',
+  evidence:[
+   {x:4.5,z:1.5,label:'Review security footage',note:'Camera: smoke at the archive cabinet at 06:43. The only entrance is continuously covered; no visitor entered before the alarm.'},
+   {x:17.5,z:2.5,label:'Read cleaner interview',note:'Cleaner reports seeing smoke at 06:46. They did not see ignition. This account is a witness statement.'},
+   {x:10.5,z:7.5,label:'Document the cabinet',note:'Cabinet was locked. Paper stored against its timer enclosure. This is the scene survey; damage alone does not establish the cause.'},
+   {x:1.5,z:11.5,label:'Audit exhibit A-03',note:'A-03: scene photograph, item location and seal number recorded. Courier receipt lacks the recipient signature. Flag the continuity gap.'},
+   {x:19.5,z:12.5,label:'Read lab and alarm records',note:'Fictional lab finding: timer contact welded before ignition, heating the adjacent paper. Alarm 06:45; crew arrival 06:54. No deliberate ignition evidence established.'},
+  ],origins:[{x:10.5,z:10.5,label:'Call it: archive cabinet',correct:true},{x:1.5,z:7.5,label:'Call it: reception'},{x:19.5,z:5.5,label:'Call it: roof void'}],
+ },
+ {
+  name:'Break the chain',place:'FREIGHT TERMINAL · SERVICE BAY',type:'rescue',kind:'plant',
+  brief:'Reach the blue systems terminal at the entry. Isolate damaged circuits without disabling exit lighting, decode the access controller, then rescue three workers and put out the fire.',
+  time:195,color:0x74704d,map:HOTEL_MAP,exits:[[1.5,1.5],[19.5,13.5]],
+  people:[[4.5,5.5],[10.5,7.5],[16.5,11.5]],fires:[[7.5,2.5],[13.5,10.5],[19.5,8.5]],
+  puzzles:DEPOT_PUZZLES,terminal:{x:3.5,z:1.5},puzzleFed:true,spread:36,spreadMax:2,
+ },
 ];
 
 export const exitsOf = m => m.exits ?? [[1.5, 1.5]];
@@ -89,6 +118,7 @@ export function createMission(i, bonusSeconds = 0) {
     air:100, water:100, carry:null, saved:0,
     status:'playing', collapse:0, score:0, message:m.brief,
     taskDone:!m.task,
+    puzzles:(m.puzzles??[]).map(p=>({...p,done:false,attempts:0})),activePuzzle:null,
     people:(m.people ?? []).map(([x,z]) => ({x, z, saved:false, carried:false})),
     fires:(m.fires ?? []).map(([x,z]) => ({x, z, heat:100})),
     valves:(m.valves ?? []).map(v => ({...v, closed:false})),
@@ -106,6 +136,7 @@ export function maxScore(m) {
        + (m.valves?.length ?? 0) * 200
        + (m.evidence?.length ?? 0) * 150
        + (m.origins ? 600 : 0)
+       + (m.puzzles?.length ?? 0) * 250
        + m.time * 5;
 }
 export const STAR_AT = [.4, .6, .8];
@@ -137,10 +168,12 @@ export function nearby(s) {
   const evidence = s.evidence.find(e => !e.found && reach(s, e, EXAMINE_REACH));
   if (evidence) return {type:'evidence', value:evidence, label:evidence.label};
 
-  if (s.evidence.length && s.evidence.every(e => e.found)) {
+  if (s.evidence.length && s.evidence.every(e => e.found) && puzzlesComplete(s)) {
     const origin = s.origins.find(o => reach(s, o, EXAMINE_REACH));
     if (origin) return {type:'origin', value:origin, label:origin.label};
   }
+
+  if(s.m.terminal && !puzzlesComplete(s) && reach(s,s.m.terminal,2))return {type:'puzzle',label:'Operate systems terminal'};
 
   const valve = s.valves.find(v => !v.closed && reach(s, v, 1.5));
   if (valve) return {type:'valve', value:valve, label:valve.label};
@@ -154,6 +187,7 @@ export function interact(s) {
   if (s.status !== 'playing') return;
   const n = nearby(s);
   if (!n) return;
+  if(n.type==='puzzle'){s.activePuzzle=s.puzzles.findIndex(p=>!p.done);return;}
   if (n.type === 'person') {
     s.carry = s.people.indexOf(n.value); n.value.carried = true;
     s.message = 'Casualty secured. Carry them back to the green stairwell.';
@@ -167,11 +201,11 @@ export function interact(s) {
   } else if (n.type === 'evidence') {
     n.value.found = true; s.score += 150;
     const left = s.evidence.filter(e => !e.found).length;
-    s.message = `${n.value.note}${left ? ` ${left} more to examine.` : ' That is the picture — go and call the seat of the fire.'}`;
+    s.message = `${n.value.note}${left ? ` ${left} more to examine.` : ' All records collected. Open CASEBOOK to reconstruct and test the case.'}`;
   } else if (n.type === 'origin') {
     if (n.value.correct) {
       s.solved = true; s.score += 600;
-      s.message = 'Origin confirmed. Cause determined — electrical fault in the wall cavity.';
+      s.message = s.m.conclusion;
     } else {
       s.calls++; s.score = Math.max(0, s.score - 150);
       s.message = s.calls >= 2
@@ -212,7 +246,7 @@ function hose(s, k, dt) {
     const diff = Math.atan2(Math.sin(angle - s.yaw), Math.cos(angle - s.yaw));
     if (fire.heat > 0 && d < 5 && Math.abs(diff) < .24 && Math.abs(s.pitch) < .65 && clearLine(s, fire.x, fire.z)) {
       // A fuel- or gas-fed fire will not go out while it is still being fed.
-      const fed = s.m.gasFed && !fuelIsolated(s);
+      const fed = s.m.gasFed && !fuelIsolated(s) || s.m.puzzleFed && !puzzlesComplete(s);
       fire.heat = Math.max(fed ? 20 : 0, fire.heat - dt * 45);
       if (fire.heat === 0) { s.score += 100; s.message = 'Fire knocked down.'; }
     }
@@ -292,7 +326,7 @@ export function tick(s, k, dt) {
     if (s.pressure >= 100) { s.status = 'lost'; s.message = 'The line let go. The switch room is gone.'; return; }
   }
 
-  if (WIN[s.m.type](s)) { s.status = 'won'; s.score += Math.ceil(s.time) * 5; return; }
+  if (WIN[s.m.type](s) && puzzlesComplete(s)) { s.status = 'won'; s.score += Math.ceil(s.time) * 5; return; }
 
   if (s.time <= 0) {
     if (s.m.type === 'rescue' || s.m.type === 'contain') {
