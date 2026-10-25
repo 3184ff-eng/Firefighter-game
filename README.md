@@ -70,3 +70,28 @@ prevention, and system-gated suppression. A local 390×844 browser fixture verif
 casebook opening, ordered selections and progression from timeline to preservation.
 The fixture pre-collected evidence only for UI testing and is not shipped. Physical
 multi-touch iPhone/Android testing remains outstanding.
+
+## First Response driving level
+
+Open `response.html`, also linked prominently from both mission menus. This standalone
+level preserves the seven existing paired incidents. Answer dispatch at Station 04,
+board the engine, follow a live GPS street route around three closures and crossing
+traffic, then brake inside the destination zone before the 100-second clock expires.
+Timeout triggers a five-second collapsing-building cutscene before the loss screen.
+Arrival offers a link to the existing Mariner House exterior rescue. Best response
+score is stored separately and never changes existing campaign locks or records.
+
+Keyboard: W/up accelerate, S/down reverse, A/D or left/right steer, Space brake,
+P pause. Touch controls support separate held pointers for steering and throttle.
+Blur/hidden-page pauses prevent a background countdown. Optional synthesized siren.
+Textured streets/buildings, detailed truck fittings, rotating wheels, smoke and
+layered flame effects are procedural and require no external assets or GPS service.
+The map is fictional; it never requests device location.
+
+Validation: 64 automated tests pass, including dispatch gates, GPS closure avoidance,
+collision response, timed collapse, stopped arrival and a driven route completing
+inside the deadline. Browser verified dispatch, boarding, keyboard movement and GPS.
+An accelerated local-only fixture exercised the phone collapse path; its original
+camera was obstructed, and the production camera was moved to the open east side.
+The final graphics revision still needs visual verification because the browser
+connection stopped responding. Physical multi-touch device testing is outstanding.
