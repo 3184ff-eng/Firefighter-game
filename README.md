@@ -35,3 +35,38 @@ Fires in the second and third missions spread to nearby cells over time, so a sl
 Timeout triggers a five-second exterior collapse animation before results. Best scores stay in local storage. Existing exterior mission saves are retained. WebGL support is required for 3D; classic.html provides the 2D missions.
 
 Fictional arcade game, not operational training.
+
+## Mobile field kit
+Settings offers Auto/Battery saver/High detail graphics, automatic or explicit touchscreen controls, and look sensitivity. Touch controls support a left floating analog stick with a dead zone; the right side looks around, and holding then dragging the hose button aims while spraying. Settings pause the mission. Both safe exits appear on the map. Portrait and landscape layouts retain the mission timer and secondary hull/pressure readings. Texture anisotropy, readable civilian details and a visible gloved hose hand improve presentation; a nearby-light budget and reduced water particles in Battery saver limit rendering cost.
+
+Validation: 53 tests pass, including the existing campaign/exterior/interior tests and four new input/graphics tests. Browser checks used 390x844 portrait and 844x390 landscape fixtures; no horizontal overflow was measured, held spray consumed water, settings persisted, and the canvas remained aligned after menu navigation. Fixtures were removed. Physical iOS/Android multi-touch and GPU performance still require device testing.
+
+## Seven-level casework expansion
+
+The public release target remains https://3184ff-eng.github.io/Firefighter-game/.
+Seven paired exterior/interior levels (14 stages) include Waterworks, Ashes & Alibis,
+and Freight Terminal. Existing four-level campaign and exterior saves are extended.
+The hotel and archive each have five recoverable exhibits and four linked casebook
+puzzles. Pump routing/flow balancing and circuit isolation/access sequencing add
+four operational puzzles, for twelve total. These are authored fictional scenarios,
+not real-world operating procedures. Hotel cause remains Undetermined; the archive
+has an explicitly fictional lab finding supporting Accidental, with a custody gap
+recorded as a limitation. Origin and cause are separate findings.
+
+Open **Casebook / Tasks** (J) to review collected records. Cold-scene puzzles unlock
+after evidence collection; operational puzzles are accessed at the blue terminal
+beside entry. The clock pauses while reading/solving. Hints, retry feedback and
+completed explanations remain available. Solving puzzles is required for completion.
+
+Design references: Supergiant's [Hades FAQ](https://www.supergiantgames.com/blog/hades-faq/)
+for challenge, expression and replayability; NIJ's
+[Guide for Investigating Fire and Arson](https://nij.ojp.gov/topics/articles/guide-investigating-fire-and-arson)
+for evidence preservation, testing hypotheses and considering alternatives. These
+informed the design; they do not establish retention, revenue or dopamine outcomes.
+
+Validation: 58 Node tests pass, including simulated completion of all seven interior
+and exterior missions, save expansion, puzzle gating, malformed answers, repeat-score
+prevention, and system-gated suppression. A local 390×844 browser fixture verified
+casebook opening, ordered selections and progression from timeline to preservation.
+The fixture pre-collected evidence only for UI testing and is not shipped. Physical
+multi-touch iPhone/Android testing remains outstanding.

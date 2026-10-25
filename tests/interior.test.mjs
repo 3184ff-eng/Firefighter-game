@@ -1,3 +1,4 @@
+import {submitPuzzle} from '../src/puzzles.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -91,13 +92,16 @@ function deliver(s, person) {
 function useAt(s, point) { walkTo(s, point); interact(s); tick(s, {}, 1/60); }
 
 // Plays whichever job this mission actually is.
+function solvePuzzles(s) {for(const [i,p] of s.puzzles.entries())assert.equal(submitPuzzle(s,i,p.answer).ok,true);}
 function play(s) {
   const m = s.m;
   if (m.type === 'investigate') {
     for (const e of s.evidence) useAt(s, e);
+    solvePuzzles(s);
     useAt(s, s.origins.find(o => o.correct));
     return;
   }
+  solvePuzzles(s);
   for (const v of s.valves) useAt(s, v);
   if (m.task) useAt(s, m.task);
   for (const p of s.people) deliver(s, p);
@@ -111,7 +115,7 @@ function play(s) {
 // ---- shape -----------------------------------------------------------------
 
 test('every level is a different building and a different job',()=>{
-  assert.equal(MISSIONS.length, 4);
+  assert.equal(MISSIONS.length, 7);
   assert.equal(new Set(MISSIONS.map(m => m.type)).size, 4, 'four distinct jobs');
   assert.equal(new Set(MISSIONS.map(m => m.kind)).size, 4, 'four distinct buildings');
 });
@@ -296,6 +300,7 @@ test('the origin cannot be called until the evidence is in',()=>{
 test('working the evidence then calling the right seat solves it',()=>{
   const s = createMission(2);
   for (const e of s.evidence) { useAt(s, e); assert.equal(e.found, true, e.label); }
+  solvePuzzles(s);
   const right = s.origins.find(o => o.correct);
   walkTo(s, right);
   assert.equal(nearby(s)?.type, 'origin', 'now it offers the call');
@@ -308,6 +313,7 @@ test('working the evidence then calling the right seat solves it',()=>{
 test('two wrong calls lose the scene',()=>{
   const s = createMission(2);
   for (const e of s.evidence) useAt(s, e);
+  solvePuzzles(s);
   const wrong = s.origins.filter(o => !o.correct);
   useAt(s, wrong[0]);
   assert.equal(s.status, 'playing', 'the first wrong call is a warning');
@@ -375,6 +381,7 @@ test('a wider examine reach stays unambiguous and still respects walls',()=>{
   for (const o of s.origins) {
     const probe = createMission(2);
     probe.evidence.forEach(e => e.found = true);
+    solvePuzzles(probe);
     probe.x = o.x; probe.z = o.z;
     const n = nearby(probe);
     assert.equal(n?.type, 'origin');
