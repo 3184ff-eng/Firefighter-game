@@ -15,3 +15,10 @@ test('an actual driven route can reach the address before the deadline',()=>{con
  }
  assert.equal(s.status,'won',`route ended ${s.status} at ${s.x},${s.z}, hits=${s.hits}`);assert.ok(s.time>0);
 });
+test('the response gets the full 100 seconds at 30, 60 and 120 frames per second',()=>{
+ for(const fps of [30,60,120]){const s=createResponse();dispatch(s);s.time=1.8;depart(s);assert.equal(s.time,100);
+ for(let i=0;i<99*fps;i++)stepResponse(s,{},1/fps);
+ assert.equal(s.status,'driving');assert.ok(Math.abs(s.time-1)<.001);
+ for(let i=0;i<fps+1;i++)stepResponse(s,{},1/fps);
+ assert.equal(s.status,'collapsing');}
+});

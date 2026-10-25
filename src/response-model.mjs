@@ -31,7 +31,7 @@ export function drivable(x,z){if(x < -9||x>249||z < -9||z>329)return false;const
 export function collision(x,z,t){if(!drivable(x,z))return 'Building or kerb';for(const e of CLOSURES){const cx=(e.a[0]+e.b[0])*GRID/2,cz=(e.a[1]+e.b[1])*GRID/2;if(Math.abs(x-cx)<(e.a[0]===e.b[0]?13:5)&&Math.abs(z-cz)<(e.a[0]===e.b[0]?5:13))return 'Road closed — follow the GPS detour';}if(trafficAt(t).some(c=>Math.hypot(x-c.x,z-c.z)<7))return 'Traffic collision — brake and steer clear';return null;}
 export function createResponse(){return {x:0,z:0,angle:0,speed:0,time:LIMIT,elapsed:0,status:'station',collapse:0,hits:0,cooldown:0,message:'Station 04 · Night watch. Awaiting dispatch.',score:0};}
 export function dispatch(s){if(s.status==='station'){s.status='briefing';s.message='STRUCTURE FIRE · Mariner House, 240 Riverside Avenue. Respond before structural failure.';}}
-export function depart(s){if(s.status==='briefing'){s.status='driving';s.message='Engine 04 responding. GPS has plotted a route around roadworks.';}}
+export function depart(s){if(s.status==='briefing'){s.time=LIMIT;s.elapsed=0;s.status='driving';s.message='Engine 04 responding. GPS has plotted a route around roadworks.';}}
 export function stepResponse(s,k,dt){
  dt=Math.max(0,Math.min(.05,dt));if(s.status==='collapsing'){s.collapse+=dt;if(s.collapse>=5)s.status='lost';return;}if(s.status!=='driving')return;
  s.time=Math.max(0,s.time-dt);s.elapsed+=dt;s.cooldown=Math.max(0,s.cooldown-dt);

@@ -95,3 +95,14 @@ An accelerated local-only fixture exercised the phone collapse path; its origina
 camera was obstructed, and the production camera was moved to the open east side.
 The final graphics revision still needs visual verification because the browser
 connection stopped responding. Physical multi-touch device testing is outstanding.
+
+## Level 08 integration and timer clarification
+
+First Response is now numbered Level 08 in the main mission list and has a prominent
+launch card above the main game. `/?mission=first-response` hosts the driving level
+inside the main game URL. Existing seven incident indexes and saves remain unchanged.
+The timer explicitly displays seconds (100s), resets to the full 100 on departure,
+and stays stopped during the station briefing. Browser verification measured 100s
+before departure and 90s after ten seconds driving. 65 tests pass, including full
+100-second countdown tests at 30/60/120fps. The obsolete localhost QA tab used a 1.8s
+collapse timer; it was closed and is never part of the public deployment.

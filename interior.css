@@ -54,3 +54,5 @@ body.touch .controls{display:none}body:not(.touch) .controls{display:flex}body:n
 @media(prefers-reduced-motion:reduce){.case-feedback.success{animation:none}}
 
 .response-link{display:block;padding:16px;margin-bottom:12px;border:1px solid #d6a36b;border-radius:10px;background:#453927;color:#ffd59f;font-size:14px;text-decoration:none;line-height:1.5}
+
+.response-level-banner{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:18px 22px;margin-bottom:16px;border:2px solid #efad71;border-radius:12px;background:linear-gradient(110deg,#483424,#192c38);text-decoration:none;color:#ffe3bc}.response-level-banner span{font-size:12px;letter-spacing:1px;font-weight:bold}.response-level-banner strong{font-size:16px}.response-level-banner small{color:#ded9c9;font-size:11px}.response-level-banner b{padding:10px 14px;background:#edac75;color:#152631;border-radius:7px;font-size:12px}.in-mission .response-level-banner{display:none}@media(max-width:600px){.response-level-banner{padding:14px;gap:8px}.response-level-banner strong{font-size:14px}.response-level-banner b{width:100%;text-align:center}}
