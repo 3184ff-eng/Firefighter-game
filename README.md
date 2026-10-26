@@ -122,3 +122,23 @@ traffic staying on open segments, railway collision timing, a complete drive wit
 traffic and railway active within 100 seconds, and countdown checks at 30/60/120fps.
 Local browser checks confirmed the expanded GPS and dispatch/boarding presentation.
 Physical iPhone/Android multi-touch and frame-rate testing remain outstanding.
+
+## Joystick and high-rise exterior update
+
+Driving now has a visible proportional joystick: up accelerates, down reverses,
+and left/right steer. DRIVE, REVERSE and BRAKE buttons remain available for a
+second finger. Pointer release/cancel, pause and focus loss reset joystick input.
+Keyboard controls and the 100-second response deadline are preserved.
+
+Exterior incidents now have 3, 4, 6, 8, 5, 6 and 7 storeys respectively. A vertical
+camera follows the climb. Rolling debris warns before spawning and before dropping
+to the next floor, reverses direction on each ledge, and leaves both ladders clear.
+Hose it away for 50 points, or shelter at a ladder while carrying a civilian. Hits
+cost 12 air with a 1.5-second cooldown. Mission timers accommodate longer rescues;
+existing incident indexes and campaign progress remain intact.
+
+Validation: 71 Node tests pass, including completion of all exterior missions,
+analog driving, debris warnings/collisions/clearing and roof camera bounds. Local
+browser verified joystick acceleration, braking and climbing to floor eight with
+no reported console errors on the exterior page. Physical phone multi-touch and
+performance testing remain outstanding.

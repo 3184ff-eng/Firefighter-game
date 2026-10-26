@@ -37,3 +37,12 @@ test('the railway crossing stops traffic for five seconds and then opens',()=>{
  assert.equal(gateState(0).closed,true);assert.equal(gateState(4.9).closed,true);assert.equal(gateState(5).closed,false);assert.equal(gateState(16).closed,true);
  assert.match(collision(GATE.x,GATE.z,1),/Rail crossing/);assert.equal(collision(GATE.x,GATE.z,6),null);
 });
+
+test('driving joystick supports proportional throttle and steering without changing keyboard input',()=>{
+ const analog=createResponse(),keyboard=createResponse(),gentle=createResponse();
+ for(const s of [analog,keyboard,gentle]){dispatch(s);depart(s);}
+ for(let i=0;i<30;i++){stepResponse(analog,{throttle:1,steer:.5},1/60);stepResponse(keyboard,{forward:true,right:true},1/60);stepResponse(gentle,{throttle:.25,steer:0},1/60);}
+ assert.ok(analog.angle>0&&analog.angle<keyboard.angle);assert.ok(gentle.speed>0&&gentle.speed<analog.speed);
+ const before=analog.speed;stepResponse(analog,{throttle:0,steer:0,brake:true},.05);assert.ok(analog.speed<before);
+ const reverse=createResponse();dispatch(reverse);depart(reverse);stepResponse(reverse,{throttle:-1,steer:0},.05);assert.ok(reverse.speed<0);
+});

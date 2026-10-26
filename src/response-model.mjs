@@ -48,10 +48,10 @@ export function stepResponse(s,k,dt){
  dt=Math.max(0,Math.min(.05,dt));if(s.status==='collapsing'){s.collapse+=dt;if(s.collapse>=5)s.status='lost';return;}if(s.status!=='driving')return;
  s.time=Math.max(0,s.time-dt);s.elapsed+=dt;for(const [at,note]of [[75,'Dispatch: traffic building through Old Town. Follow the cyan detour.'],[45,'Dispatch: roof weakening. Keep moving toward Riverside.'],[20,'Urgent: twenty seconds to structural failure.']])if(s.time<=at&&!s.warnings.includes(at)){s.warnings.push(at);s.message=note;}s.cooldown=Math.max(0,s.cooldown-dt);
  if(s.time<=0){s.status='collapsing';s.speed=0;s.message='STRUCTURAL FAILURE · Building collapsing';return;}
- const throttle=k.forward?1:k.reverse?-1:0;
+ const throttle=Number.isFinite(k.throttle)?Math.max(-1,Math.min(1,k.throttle)):k.forward?1:k.reverse?-1:0;
  s.speed+=throttle*18*dt;if(!throttle)s.speed*=Math.exp(-1.5*dt);if(k.brake)s.speed*=Math.exp(-8*dt);
  s.speed=Math.max(-10,Math.min(32,s.speed));
- const steer=(k.right?1:0)-(k.left?1:0);
+ const steer=Number.isFinite(k.steer)?Math.max(-1,Math.min(1,k.steer)):(k.right?1:0)-(k.left?1:0);
  s.angle+=steer*1.65*dt*Math.min(1,Math.abs(s.speed)/7)*Math.sign(s.speed);
  const x=s.x+Math.sin(s.angle)*s.speed*dt,z=s.z+Math.cos(s.angle)*s.speed*dt;
  const hit=collision(x,z,s.elapsed);

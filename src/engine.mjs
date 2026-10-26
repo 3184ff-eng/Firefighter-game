@@ -15,7 +15,23 @@ export const MISSIONS=[
 {name:'Waterworks',district:'WEST BANK',floors:3,time:95,color:'#346c78',victims:[[1,350],[2,620],[3,360]],fires:[[1,540,65],[2,430,60],[3,550,65]],spread:24,brief:'Clear the maintenance block before restoring the pump system inside.',subtitle:'3 floors · pump emergency'},
 {name:'Ashes & Alibis',district:'OLD QUARTER',floors:3,time:100,color:'#73596b',victims:[[1,640],[2,340],[3,630]],fires:[[1,440,55],[2,530,65],[3,420,65]],spread:25,brief:'Evacuate the archive annex. The investigation begins after the fire.',subtitle:'3 floors · a second case'},
 {name:'Freight Terminal',district:'RAIL YARD',floors:4,time:115,color:'#526750',victims:[[1,350],[2,630],[3,340],[4,620]],fires:[[1,540,60],[2,420,65],[3,530,65],[4,440,70]],spread:22,brief:'Clear the dispatch block, then enter the terminal to isolate the systems.',subtitle:'4 floors · systems response'}];
-export function createGame(index=0,crewId='engine'){const m=MISSIONS[index];const crew=crewById(crewId);return {index,mission:m,crew,status:'playing',time:m.time,elapsed:0,p:{x:166,y:554,face:1,air:100,water:100,carry:null,walk:0,moving:false,climbing:false,spraying:false},victims:m.victims.map(([floor,x],id)=>({id,floor,x,saved:false,carried:false})),fires:m.fires.map(([floor,x,heat])=>({floor,x,heat,out:false})),saved:0,score:0,suppressed:0,events:[],spreadClock:0,refillNotice:false,finished:false};}
+// Taller rescue towers retain incident indexes and campaign saves.
+const HEIGHTS=[3,4,6,8,5,6,7],TIMES=[68,100,145,180,125,140,165];
+MISSIONS.forEach((m,i)=>{const old=m.floors;m.floors=HEIGHTS[i];m.time=TIMES[i];m.victims=m.victims.map(([f,x])=>[f===1?1:Math.ceil(f*m.floors/old),x]);m.fires=m.fires.map(([f,x,h])=>[f===1?1:Math.ceil(f*m.floors/old),x,h]);m.debrisInterval=Math.max(8,15-i);m.subtitle=`${m.floors} storeys · rolling debris`;m.brief+=` ${m.floors} storeys: watch for amber debris warnings. Hose debris away or shelter at a ladder.`;});
+export function exteriorCameraY(s){return Math.max(Math.min(0,floorY(s.mission.floors)-120),Math.min(0,s.p.y-360));}
+export function stepDebris(s,dt){
+ s.debrisClock+=dt;s.debrisCooldown=Math.max(0,s.debrisCooldown-dt);
+ if(s.debrisClock>=s.mission.debrisInterval){s.debrisClock=0;if(s.debris.length<5){const dir=s.debrisWave++%2? -1:1;s.debris.push({floor:s.mission.floors,x:dir===1?218:742,dir,warning:2,health:.55,rotation:0});s.events.push({type:'message',text:'Debris incoming! Hose it away or shelter at a ladder.'});}}
+ for(const d of s.debris){if(d.warning>0){d.warning-=dt;continue;}d.x+=d.dir*(75+s.index*6)*dt;d.rotation+=d.dir*dt*5;
+  if(d.x>742||d.x<218){d.x=Math.max(218,Math.min(742,d.x));d.floor--;d.dir*=-1;d.warning=.8;continue;}
+  if(d.floor<1)continue;
+  const same=floorAt(s.p.y)===d.floor,gap=d.x-s.p.x;
+  if(same&&s.p.spraying&&gap*s.p.face>0&&gap*s.p.face<195){d.health-=dt;if(d.health<=0){s.score+=50;s.events.push({type:'extinguish',x:d.x,y:floorY(d.floor)-15,text:'Debris cleared +50'});}}
+  if(d.health>0&&same&&Math.abs(gap)<27&&s.debrisCooldown===0){s.p.air=Math.max(0,s.p.air-12);s.debrisCooldown=1.5;s.debrisHits++;s.events.push({type:'message',text:'Debris hit! Air -12. Clear it with the hose or use the ladders.'});}
+ }
+ s.debris=s.debris.filter(d=>d.floor>0&&d.health>0);
+}
+export function createGame(index=0,crewId='engine'){const m=MISSIONS[index];const crew=crewById(crewId);return {index,mission:m,crew,status:'playing',time:m.time,elapsed:0,p:{x:166,y:554,face:1,air:100,water:100,carry:null,walk:0,moving:false,climbing:false,spraying:false},victims:m.victims.map(([floor,x],id)=>({id,floor,x,saved:false,carried:false})),fires:m.fires.map(([floor,x,heat])=>({floor,x,heat,out:false})),saved:0,score:0,suppressed:0,events:[],spreadClock:0,refillNotice:false,finished:false,debris:[],debrisClock:0,debrisWave:0,debrisCooldown:0,debrisHits:0};}
 export function floorY(f){return WORLD.ground-f*WORLD.floorH}
 export function floorAt(y){const f=Math.round((WORLD.ground-y)/WORLD.floorH);return Math.abs(y-floorY(f))<9?f:-1}
 export function nearestVictim(s){const f=floorAt(s.p.y);return s.victims.find(v=>!v.saved&&!v.carried&&v.floor===f&&Math.abs(v.x-s.p.x)<40)}
@@ -36,6 +52,7 @@ if(p.moving)p.walk+=dt*(p.climbing?10:13);if(f>0)p.air-=dt*.10*s.crew.air;
 for(const fire of s.fires){if(fire.out)continue;if(s.mission.spread)fire.heat=Math.min(100,fire.heat+dt*.6);const dx=fire.x-p.x;if(f===fire.floor&&Math.abs(dx)<58){p.air-=dt*(8+fire.heat*.08)*s.crew.air;if(!s.heatWarn||s.elapsed-s.heatWarn>5){s.heatWarn=s.elapsed;s.events.push({type:'message',text:'High heat! Step back and use the hose.'})}}const reach=dx*p.face;if(p.spraying&&f===fire.floor&&reach>FIRE_STANDOFF&&reach<195){fire.heat=Math.max(0,fire.heat-85*dt);if(fire.heat===0){fire.out=true;s.score+=100;s.suppressed++;s.events.push({type:'extinguish',x:fire.x,y:floorY(fire.floor)-20,text:'Fire knocked down +100'});}}else if(p.spraying&&f===fire.floor&&reach>-20&&reach<=FIRE_STANDOFF&&fire.heat>70){fire.heat=Math.min(100,fire.heat+dt*26);p.air-=dt*15*s.crew.air;s.flaring=s.elapsed;if(!s.flareWarn||s.elapsed-s.flareWarn>4){s.flareWarn=s.elapsed;s.events.push({type:'flare',x:fire.x,y:floorY(fire.floor)-20,text:'Too close — it flares back. Hose it from a distance.'});}}}
 if(p.spraying)p.water=Math.max(0,p.water-dt*19*s.crew.water);
 if(f===0&&p.x<195){p.air=Math.min(100,p.air+dt*55);p.water=Math.min(100,p.water+dt*65);if(p.carry!==null){const v=s.victims[p.carry];v.saved=true;v.carried=false;p.carry=null;s.saved++;s.score+=500;s.events.push({type:'saved',x:p.x,y:p.y-30,text:'Civilian safe! +500'});}}
+stepDebris(s,dt);
 p.air=Math.max(0,p.air);
 if(s.mission.spread){s.spreadClock+=dt;if(s.spreadClock>=s.mission.spread){s.spreadClock=0;const source=s.fires.find(x=>!x.out&&x.heat>35);if(source){const nx=source.x+(source.x>480?-105:105);if(!s.fires.some(x=>x.floor===source.floor&&Math.abs(x.x-nx)<45)&&s.fires.filter(x=>!x.out).length<10&&WORLD.ladders.every(lx=>Math.abs(nx-lx)>140)){s.fires.push({floor:source.floor,x:nx,heat:40,out:false});s.events.push({type:'spread',text:'Fire is spreading. Clear your route.'});}}}}
 if(s.saved===s.victims.length){s.status='won';s.score+=Math.round(s.time)*5;s.finished=true;s.events.push({type:'win'});}else if(s.time<=0||p.air<=0){s.status='lost';s.finished=true;s.events.push({type:'lose',text:p.air<=0?'Your air ran out. Refill at the engine and avoid hot spots.':'Time ran out. Try a shorter route or clear fire earlier.'});}}
