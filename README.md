@@ -106,3 +106,19 @@ and stays stopped during the station briefing. Browser verification measured 100
 before departure and 90s after ten seconds driving. 65 tests pass, including full
 100-second countdown tests at 30/60/120fps. The obsolete localhost QA tab used a 1.8s
 collapse timer; it was closed and is never part of the public deployment.
+
+## Expanded city response
+
+Level 08 now spans 42 city blocks across Dockside, Old Town, Market District and
+Riverside. Twenty-one closures force staggered detours, eighteen vehicles share the
+roads, and a railway barrier closes for five seconds in each sixteen-second cycle.
+GPS shows the route, closures and crossing state; district, remaining distance and
+escalating radio warnings help the player respond. The full 100-second timer starts
+only on departure. Static scenery is instanced and window textures are shared to
+reduce rendering overhead. The expanded route has a separate best-score record.
+
+Validation: 67 automated tests pass, including all junctions reaching the incident,
+traffic staying on open segments, railway collision timing, a complete drive with
+traffic and railway active within 100 seconds, and countdown checks at 30/60/120fps.
+Local browser checks confirmed the expanded GPS and dispatch/boarding presentation.
+Physical iPhone/Android multi-touch and frame-rate testing remain outstanding.
