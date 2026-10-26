@@ -113,8 +113,8 @@ test('fire spreads on every incident now, stays bounded and never seals a ladder
   }
 });
 
-test('every mission is tighter than it was, and the clock is the pressure',()=>{
-  for(const m of MISSIONS)assert.ok(m.time<=115,`${m.name} clock is ${m.time}`);
+test('taller missions retain bounded clocks and spreading fire',()=>{
+  for(const m of MISSIONS){assert.ok(m.floors>=3&&m.floors<=8);assert.ok(m.time<=180,`${m.name} clock is ${m.time}`);}
   assert.ok(MISSIONS.every(m=>m.spread>0),'every incident spreads');
 });
 
@@ -149,4 +149,22 @@ test('letting go of the ladder settles you onto the nearest floor',()=>{
   far.p.x=166;far.p.y=floorY(1)+40;    // genuinely mid-ladder, should stay put
   run(far,{},1);
   assert.equal(floorAt(far.p.y),-1,'a real mid-ladder position is left alone');
+});
+
+test('rolling debris warns before moving, descends floors and leaves ladders safe',()=>{
+ const s=createGame(3);s.debrisClock=s.mission.debrisInterval;step(s,{},.05);assert.equal(s.debris.length,1);
+ const d=s.debris[0],x=d.x;run(s,{},1);assert.equal(d.x,x);assert.ok(d.warning>0);
+ run(s,{},3);assert.ok(d.x>x);const top=d.floor;run(s,{},8);assert.ok(d.floor<top);assert.ok(s.debris.length<=5);
+ s.p.y=floorY(d.floor);s.p.x=166;s.debrisCooldown=0;d.x=218;d.warning=0;const hits=s.debrisHits;step(s,{},.05);assert.equal(s.debrisHits,hits);
+});
+test('debris hits have a cooldown and can be cleared with the hose only when not carrying',()=>{
+ const s=createGame();s.p.y=floorY(1);s.p.x=400;s.debris=[{floor:1,x:400,dir:1,warning:0,health:.55,rotation:0}];
+ step(s,{},.05);assert.equal(s.debrisHits,1);step(s,{},.05);assert.equal(s.debrisHits,1);
+ s.fires.forEach(f=>f.out=true);s.p.x=300;s.p.face=1;s.debris[0].x=400;run(s,{spray:true},.65);assert.equal(s.debris.length,0);assert.equal(s.score,50);
+ const carry=createGame();carry.p.x=360;carry.p.y=floorY(1);interact(carry);carry.debris=[{floor:1,x:430,dir:1,warning:0,health:.55,rotation:0}];run(carry,{spray:true},.2);assert.equal(carry.debris[0].health,.55);
+});
+test('vertical camera reaches the roof and returns to the engine',async()=>{
+ const {exteriorCameraY}=await import('../src/engine.mjs');const s=createGame(3);assert.equal(s.mission.floors,8);assert.equal(exteriorCameraY(s),0);
+ s.p.y=floorY(8);const y=exteriorCameraY(s);assert.ok(y<0);assert.ok(s.p.y-y>0&&s.p.y-y<640);assert.ok(floorY(8)-78-y>=0);
+ s.p.y=554;assert.equal(exteriorCameraY(s),0);
 });
